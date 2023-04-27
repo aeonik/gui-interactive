@@ -36,6 +36,7 @@
 (fetch-subdirs-and-files (clojure.java.io/file (System/getProperty "user.home")))
 (fetch-subdirs ["home" "dave"] "/home/dave")
 
+
 ;(defn update-tree-items [state id event]
 ;  (-> state
 ;      (update ::expanded (if event conj disj) id)
@@ -57,8 +58,10 @@
   (println e)
   (println (first (get e :id)))
   ;{:event/type :gui-interactive/on-expanded-changed, :id (/home/dave), :fx/event true}
-  (swap! *state assoc :current-directory (first (get e :id))))
+  ;(swap! *state assoc :current-directory (first (get e :id)))
+  )
 
+;; For deebugging purposes, print the state to a text box
 (defn state-text-area [state-atom]
   (pprint/pprint state-atom)
   {:fx/type  :text-area
@@ -109,7 +112,9 @@
                 :expanded true,
                 :children ()})})
 
+;;TODO - Mofidy create-file-tree-item to be recursive, and produce file path tree, like the tree-items below
 (defn file-tree-view [{:keys [current-directory]}]
+  (pprint/pprint (create-file-tree-item (list current-directory) true))
   {:fx/type :v-box
    :spacing 10
    :padding 10
@@ -118,7 +123,19 @@
               {:fx/type :label
                :text    current-directory}
               {:fx/type :tree-view
-               :root    (create-file-tree-item (list current-directory) true)}]})
+               :root    {:fx/type :tree-item,
+                         :value "dave1",
+                         :expanded true,
+                         :on-expanded-changed
+                         {:event/type :gui-interactive/on-expanded-changed,
+                          :id "/home/dave1"},
+                         :children [{:fx/type :tree-item
+                                     :value   "dave2",
+                                     :expanded false,
+                                     :on-expanded-changed
+                                     {:event/type :gui-interactive/on-expanded-changed,
+                                      :id "/home/dave2"}}]}
+               }]})
 
 (create-file-tree-item (list (System/getProperty "user.home")) true)
 
