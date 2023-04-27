@@ -1,6 +1,7 @@
 (ns gui-interactive
   (:require [cljfx.api :as fx]
             [clojure.java.io :as io]
+            [clojure.pprint :as pprint]
             [clojure.string :as str])
   (:import (org.apache.commons.io FileUtils FilenameUtils)))
 
@@ -9,10 +10,12 @@
          :friction 0.4
          :current-directory (System/getProperty "user.home")
          ::expanded "test"
-         ::tree {"test1" "test2"}}))
+         ::tree {}}))
+
 
 (defn list-files-and-dirs [path]
   (file-seq (clojure.java.io/file path)))
+(println (take 10 (list-files-and-dirs "/home/dave")))
 
 (defn list-files-and-dirs [path]
   (seq (.list (clojure.java.io/file path))))
@@ -55,6 +58,15 @@
   (println (first (get e :id)))
   ;{:event/type :gui-interactive/on-expanded-changed, :id (/home/dave), :fx/event true}
   (swap! *state assoc :current-directory (first (get e :id))))
+
+(defn state-text-area [state-atom]
+  (pprint/pprint state-atom)
+  {:fx/type  :text-area
+   ;:text "test"
+   :text (with-out-str (pprint/pprint @*state))
+   ;:text     (fx/sub-val state-atom
+   ;                  (fn [state] (pr-str state)))
+   :editable false})
 
 (defn simulate-step [{:keys [velocity y]} gravity friction]
   (let [new-velocity (* (- velocity gravity) (- 1 friction))
@@ -125,6 +137,7 @@
 
 (defn root-view [{{:keys [gravity friction current-directory]} :state}]
   {:fx/type :stage
+   :title "Aeonik's Excellent Adaptation Emporium"
    :showing true
    :scene   {:fx/type :scene
              :root {:fx/type  :v-box
@@ -150,7 +163,12 @@
                                              :max     1
                                              :label   "Friction"
                                              :value   friction
-                                             :event   ::set-friction}]}]}}})
+                                             :event   ::set-friction}
+                                            ]}
+                               {:fx/type    state-text-area
+                                :state-atom *state}
+                               ]}
+             }})
 
 (def renderer
   (fx/create-renderer
@@ -162,5 +180,5 @@
 (fx/mount-renderer *state renderer)
 
 (renderer)
-;(require 'cljfx.dev)
-;(cljfx.dev/help-ui)
+(require 'cljfx.dev)
+(cljfx.dev/help-ui)
