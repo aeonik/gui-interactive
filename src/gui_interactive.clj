@@ -8,10 +8,12 @@
 (def *state
   (atom {:gravity  10
          :friction 0.4
-         :current-directory (System/getProperty "user.home")
+         ;:current-directory (System/getProperty "user.home")
+         :current-directory (.getCanonicalPath (clojure.java.io/file "resources"))
          ::expanded "test"
          ::tree {}}))
 
+(println @*state)
 
 (defn list-files-and-dirs [path]
   (file-seq (clojure.java.io/file path)))
@@ -19,22 +21,31 @@
 
 (defn list-files-and-dirs [path]
   (seq (.list (clojure.java.io/file path))))
-
+(println (list-files-and-dirs "/home/dave"))
 (defn fetch-subdirs-and-files [file]
   (->> file
        (.listFiles)
        (mapv (fn [f] (.getAbsolutePath f)))))
 
-(defn fetch-subdirs [id path]
-  (->> (clojure.java.io/file path)
+(defn ^"Vector<String>" fetch-subdirs [^java.io.File file]
+  (->> file
        (.listFiles)
-       (filter #(.isDirectory %))
-       (mapv (fn [file] (conj id (.getName file))))))
+       (filter #(-> % .isDirectory))
+       ;(mapv #(-> % .getAbsolutePath))
+       ))
 
-
-(list-files-and-dirs "/home/dave")
+;(println (fetch-subdirs (clojure.java.io/file (System/getProperty "user.home"))))
 (fetch-subdirs-and-files (clojure.java.io/file (System/getProperty "user.home")))
-(fetch-subdirs ["home" "dave"] "/home/dave")
+
+
+;(defn fetch-subdirs [id path]
+;  (->> (clojure.java.io/file path)
+;       (.listFiles)
+;       (filter #(.isDirectory %))
+;       (mapv (fn [file] (conj id (.getName file))))))
+;(fetch-subdirs ["home" "dave"] "/home/dave")
+
+
 
 
 ;(defn update-tree-items [state id event]
@@ -93,28 +104,37 @@
                                            {:fx/type :xy-chart-data
                                             :x-value index
                                             :y-value y})))}]})
+(defn list-files [path]
+  (->> (file-seq (clojure.java.io/file path))
+       (filter #(or (.isFile %) (.isDirectory %)))
+       (map #(.getCanonicalPath %))))
+(take 10 (list-files (System/getProperty "user.home")))
 
-(defn create-file-tree-item [id expanded?]
-  {:fx/type :tree-item
-   :value (str (FilenameUtils/getBaseName (last id)))
-   :expanded expanded?
-   :on-expanded-changed {:event/type ::on-expanded-changed :id id}
-   :children (if expanded?
-               ;(->> (or (get-in @*state [::tree id])
-               ;         (do
-               ;           (swap! *state update-tree-items id true)
-               ;           (get-in @*state [::tree id])))
-               ;     (map #(create-file-tree-item % (contains? (@*state ::expanded) %))))
-               ;; Add a dummy tree item to show the parent as expandable
-               [{:fx/type :tree-item}]
-               {:fx/type :tree-item,
-                :value "test",
-                :expanded true,
-                :children ()})})
+;;TODO - Mofidy create-file-tree-item to use recur instead
+;;TODO - Need to make the tree expanded? stateful
+(defn create-file-tree-item [file expanded?]
+  (let [canonical-path (.getCanonicalPath file)
+        is-dir (.isDirectory file)]
+    {:fx/type :tree-item
+     :value (str (FilenameUtils/getBaseName canonical-path))
+     :expanded expanded?
+     :on-expanded-changed (when is-dir {:event/type ::on-expanded-changed :id canonical-path})
+     :children (conj (when (and is-dir expanded?)
+                       (map #(create-file-tree-item % false)
+                            (fetch-subdirs file)))
+                     ;; Add a dummy tree item to show the parent as expandable
+                     {:fx/type :tree-item})
+     }))
+(take 10 (list-files-and-dirs "/home/dave"))
 
-;;TODO - Mofidy create-file-tree-item to be recursive, and produce file path tree, like the tree-items below
+;; Create file tree item for resources directory
+
+(.getCanonicalPath (clojure.java.io/file "resources"))
+(create-file-tree-item (clojure.java.io/file "resources") true)
+
+;(create-file-tree-item  "/home/dave" false)
 (defn file-tree-view [{:keys [current-directory]}]
-  (pprint/pprint (create-file-tree-item (list current-directory) true))
+  (pprint/pprint (create-file-tree-item (clojure.java.io/file current-directory) true))
   {:fx/type :v-box
    :spacing 10
    :padding 10
@@ -123,22 +143,7 @@
               {:fx/type :label
                :text    current-directory}
               {:fx/type :tree-view
-               :root    {:fx/type :tree-item,
-                         :value "dave1",
-                         :expanded true,
-                         :on-expanded-changed
-                         {:event/type :gui-interactive/on-expanded-changed,
-                          :id "/home/dave1"},
-                         :children [{:fx/type :tree-item
-                                     :value   "dave2",
-                                     :expanded false,
-                                     :on-expanded-changed
-                                     {:event/type :gui-interactive/on-expanded-changed,
-                                      :id "/home/dave2"}}]}
-               }]})
-
-(create-file-tree-item (list (System/getProperty "user.home")) true)
-
+               :root (create-file-tree-item (clojure.java.io/file current-directory) false)}]})
 
 (defn slider-view [{:keys [min max value label event]}]
   {:fx/type  :v-box
