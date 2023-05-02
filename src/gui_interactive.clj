@@ -6,12 +6,14 @@
             [file-operations :as file-operations])
   (:import (org.apache.commons.io FileUtils FilenameUtils)))
 
+;;TODO remove current-directory from state
+;;TODO Add the tree to the state
 (def *state
   (atom {:gravity  10
          :friction 0.4
          ;:current-directory (System/getProperty "user.home")
          :current-directory (.getCanonicalPath (clojure.java.io/file "resources"))
-         ::expanded "test"
+         ::expanded #{}
          ::tree {}}))
 
 (println @*state)
@@ -34,11 +36,22 @@
   (swap! *state assoc :gravity (:fx/event e)))
 
 (defmethod event-handler ::on-expanded-changed [e]
-  (println e)
-  (println (first (get e :id)))
-  ;{:event/type :gui-interactive/on-expanded-changed, :id (/home/dave), :fx/event true}
-  ;(swap! *state assoc :current-directory (first (get e :id)))
-  )
+  (println "Entered on-expanded-changed")
+  (let [expanded-path (get e :id)
+        is-expanded? (get e :fx/event)]
+    (println e)
+    (println expanded-path)
+    (println is-expanded?)
+    (if is-expanded?
+      (do
+        (println "Before conj to expanded:" @*state)
+        (swap! *state update ::expanded conj expanded-path)
+        (println "After conj to expanded:" @*state))
+      (do
+        (println "Before disj from expanded:" @*state)
+        (swap! *state update ::expanded disj expanded-path)
+        (println "After disj from expanded:" @*state)))))
+
 
 ;; For deebugging purposes, print the state to a text box
 (defn state-text-area [state-atom]
@@ -82,17 +95,20 @@
 ;;TODO - Need to make the tree expanded? stateful
 (defn create-file-tree-item [file expanded?]
   (let [canonical-path (.getCanonicalPath file)
-    is-dir (.isDirectory file)]
+        is-dir (.isDirectory file)]
     {:fx/type :tree-item
      :value (str (FilenameUtils/getBaseName canonical-path))
      :expanded expanded?
-     :on-expanded-changed (when is-dir {:event/type ::on-expanded-changed :id canonical-path})
-     :children (conj (when (and is-dir expanded?)
-                       (map #(create-file-tree-item % false)
-                            (file-operations/subdirs-as-file-objects file)))
-                     ;; Add a dummy tree item to show the parent as expandable
-                     {:fx/type :tree-item})
+     :on-expanded-changed (when is-dir {:event/type ::on-expanded-changed :id canonical-path :expanded expanded?})
+     :children (if (and is-dir (not expanded?))
+                 (conj (map #(create-file-tree-item % false)
+                            (file-operations/subdirs-as-file-objects file))
+                       {:fx/type :tree-item})
+                 (when (and is-dir expanded?)
+                   (map #(create-file-tree-item % false)
+                        (file-operations/subdirs-as-file-objects file))))
      }))
+
 (take 10 (file-operations/list-file-names "/home/dave"))
 
 ;; Create file tree item for resources directory
@@ -101,7 +117,7 @@
 (create-file-tree-item (clojure.java.io/file "resources") true)
 
 ;(create-file-tree-item  "/home/dave" false)
-(defn file-tree-view [{:keys [current-directory]}]
+(defn file-tree-view [{:keys [current-directory expanded]}]
   (pprint/pprint (create-file-tree-item (clojure.java.io/file current-directory) true))
   {:fx/type :v-box
    :spacing 10
@@ -111,7 +127,8 @@
               {:fx/type :label
                :text    current-directory}
               {:fx/type :tree-view
-               :root (create-file-tree-item (clojure.java.io/file current-directory) false)}]})
+               :root (create-file-tree-item (clojure.java.io/file "resources") true)}]})
+
 
 (defn slider-view [{:keys [min max value label event]}]
   {:fx/type  :v-box
@@ -125,7 +142,7 @@
                :major-tick-unit  max
                :show-tick-labels true}]})
 
-(defn root-view [{{:keys [gravity friction current-directory]} :state}]
+(defn root-view [{{:keys [gravity friction current-directory expanded]} :state}]
   {:fx/type :stage
    :title "Aeonik's Excellent Adaptation Emporium"
    :showing true
@@ -135,7 +152,8 @@
                     :children [{:fx/type  :h-box
                                 :spacing  10
                                 :children [{:fx/type file-tree-view
-                                            :current-directory current-directory}]}
+                                            :current-directory current-directory
+                                            :expanded expanded}]}
                                {:fx/type  chart-view
                                 :gravity  gravity
                                 :friction friction}
@@ -159,6 +177,7 @@
                                 :state-atom *state}
                                ]}
              }})
+
 
 (def renderer
   (fx/create-renderer
