@@ -1,6 +1,6 @@
 {:paths ["src" "target/classes"]
  :deps  {
-         org.clojure/clojure {:mvn/version "1.12.0-alpha1"}
+         org.clojure/clojure {:mvn/version "1.11.1"}
          cljfx/cljfx         {:mvn/version "1.7.22"}
          io.github.cljfx/dev {:mvn/version "1.0.36"}
          aeonik/file_hasher {:git/url "https://github.com/aeonik/file_hasher.git"

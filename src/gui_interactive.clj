@@ -2,7 +2,8 @@
   (:require [cljfx.api :as fx]
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [file-operations :as file-operations])
   (:import (org.apache.commons.io FileUtils FilenameUtils)))
 
 (def *state
@@ -15,44 +16,11 @@
 
 (println @*state)
 
-(defn list-files-and-dirs [path]
-  (file-seq (clojure.java.io/file path)))
-(println (take 10 (list-files-and-dirs "/home/dave")))
-
-(defn list-files-and-dirs [path]
-  (seq (.list (clojure.java.io/file path))))
-(println (list-files-and-dirs "/home/dave"))
-(defn fetch-subdirs-and-files [file]
-  (->> file
-       (.listFiles)
-       (mapv (fn [f] (.getAbsolutePath f)))))
-
-(defn ^"Vector<String>" fetch-subdirs [^java.io.File file]
-  (->> file
-       (.listFiles)
-       (filter #(-> % .isDirectory))
-       ;(mapv #(-> % .getAbsolutePath))
-       ))
-
-;(println (fetch-subdirs (clojure.java.io/file (System/getProperty "user.home"))))
-(fetch-subdirs-and-files (clojure.java.io/file (System/getProperty "user.home")))
-
-
-;(defn fetch-subdirs [id path]
-;  (->> (clojure.java.io/file path)
-;       (.listFiles)
-;       (filter #(.isDirectory %))
-;       (mapv (fn [file] (conj id (.getName file))))))
-;(fetch-subdirs ["home" "dave"] "/home/dave")
-
-
-
-
 ;(defn update-tree-items [state id event]
 ;  (-> state
 ;      (update ::expanded (if event conj disj) id)
 ;      (cond-> (and event (not (get-in state [::tree id])))
-;              (assoc-in [::tree id] (fetch-subdirs id (clojure.string/join "/" id)))
+;              (assoc-in [::tree id] (file-operations/fetch-subdirs id (clojure.string/join "/" id)))
 ;              (some #(= "dummy" (first %)) (get-in state [::tree id]))
 ;              (update-in [::tree id] #(filter (fn [item] (not= "dummy" (first item))) %)))))
 
@@ -114,18 +82,18 @@
 ;;TODO - Need to make the tree expanded? stateful
 (defn create-file-tree-item [file expanded?]
   (let [canonical-path (.getCanonicalPath file)
-        is-dir (.isDirectory file)]
+    is-dir (.isDirectory file)]
     {:fx/type :tree-item
      :value (str (FilenameUtils/getBaseName canonical-path))
      :expanded expanded?
      :on-expanded-changed (when is-dir {:event/type ::on-expanded-changed :id canonical-path})
      :children (conj (when (and is-dir expanded?)
                        (map #(create-file-tree-item % false)
-                            (fetch-subdirs file)))
+                            (file-operations/subdirs-as-file-objects file)))
                      ;; Add a dummy tree item to show the parent as expandable
                      {:fx/type :tree-item})
      }))
-(take 10 (list-files-and-dirs "/home/dave"))
+(take 10 (file-operations/list-file-names "/home/dave"))
 
 ;; Create file tree item for resources directory
 
