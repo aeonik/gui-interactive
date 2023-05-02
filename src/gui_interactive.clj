@@ -91,23 +91,30 @@
        (map #(.getCanonicalPath %))))
 (take 10 (list-files (System/getProperty "user.home")))
 
-;;TODO - Mofidy create-file-tree-item to use recur instead
+;;TODO - Modify create-file-tree-item to use recur instead
 ;;TODO - Need to make the tree expanded? stateful
-(defn create-file-tree-item [file expanded?]
+(defn create-tree-item [file expanded?]
   (let [canonical-path (.getCanonicalPath file)
         is-dir (.isDirectory file)]
     {:fx/type :tree-item
      :value (str (FilenameUtils/getBaseName canonical-path))
      :expanded expanded?
-     :on-expanded-changed (when is-dir {:event/type ::on-expanded-changed :id canonical-path :expanded expanded?})
-     :children (if (and is-dir (not expanded?))
-                 (conj (map #(create-file-tree-item % false)
-                            (file-operations/subdirs-as-file-objects file))
-                       {:fx/type :tree-item})
-                 (when (and is-dir expanded?)
-                   (map #(create-file-tree-item % false)
-                        (file-operations/subdirs-as-file-objects file))))
-     }))
+     :on-expanded-changed (when is-dir {:event/type ::on-expanded-changed :id canonical-path :expanded expanded?})}))
+
+(defn children-for-dir [file expanded?]
+  (let [is-dir (.isDirectory file)]
+    (cond
+      (and is-dir (not expanded?)) (conj (map #(create-tree-item % false)
+                                              (file-operations/subdirs-as-file-objects file))
+                                         {:fx/type :tree-item})
+      (and is-dir expanded?) (map #(create-tree-item % false)
+                                  (file-operations/subdirs-as-file-objects file))
+      :else nil)))
+
+(defn create-file-tree-item [file expanded?]
+  (assoc (create-tree-item file expanded?)
+    :children (children-for-dir file expanded?)))
+
 
 (take 10 (file-operations/list-file-names "/home/dave"))
 
