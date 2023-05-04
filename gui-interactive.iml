@@ -23,6 +23,7 @@
     <orderEntry type="library" name="Deps: org.clojure/spec.alpha:0.3.218" level="project" />
     <orderEntry type="library" name="Deps: org.clojure/tools.cli:1.0.214" level="project" />
     <orderEntry type="library" name="Deps: org.openjfx/javafx-media$linux:17.0.2" level="project" />
+    <orderEntry type="library" name="Deps: org.clojure/tools.trace:0.7.11" level="project" />
     <orderEntry type="library" name="Deps: org.openjfx/javafx-controls:17.0.2" level="project" />
     <orderEntry type="library" name="Deps: org.clojure/tools.analyzer.jvm:1.2.2" level="project" />
     <orderEntry type="library" name="Deps: cljfx/css:1.1.0" level="project" />
