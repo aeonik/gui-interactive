@@ -8,7 +8,8 @@
   (:import (org.apache.commons.io FileUtils FilenameUtils)))
 
 ;; Load tree items lazily by triggering loading when item is expanded
-
+(require '[flow-storm.api :as fs-api])
+;(fs-api/local-connect)                                      ;
 (def *state
   (atom {::current-directory (.getCanonicalPath (clojure.java.io/file "resources"))
          ::expanded #{} ;; expanded ids
@@ -26,15 +27,15 @@
 (defmulti handle :event/type)
 
 (defmethod handle ::on-expanded-changed [{:keys [id fx/event]}]
-  (trace (swap!
-           *state
-           #(-> %
-                (update ::expanded (if event conj disj) id)
-                (cond-> (and event (not (get-in % [::tree id])))
-                        (assoc-in [::tree id]
-                                  ;; This is "lazy loading". Note: swap! fn might be retried,
-                                  ;; don't do side effects here in your app
-                                  (file-operations/subdirs (get-in % [::current-directory]))))))))
+  (swap!
+    *state
+    #(-> %
+         (update ::expanded (if event conj disj) id)
+         (cond-> (and event (not (get-in % [::tree id])))
+                 (assoc-in [::tree id]
+                           ;; This is "lazy loading". Note: swap! fn might be retried,
+                           ;; don't do side effects here in your app
+                           (file-operations/subdirs (get-in % [::current-directory])))))))
 
 (defn root-view [{::keys [expanded tree current-directory]}]
   (let [->desc (fn ->desc [id]
@@ -58,4 +59,8 @@
     :middleware (fx/wrap-map-desc #'root-view)
     :opts {:fx.opt/map-event-handler handle}))
 
-(fx/mount-renderer *state renderer)
+
+
+;(flow-storm.api/instrument-namespaces-clj #{"gui-interactive." "cljfx."})
+
+ (fx/mount-renderer *state renderer)
