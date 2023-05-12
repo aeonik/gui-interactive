@@ -15,7 +15,7 @@
   (->> path
        clojure.java.io/file
        file-seq))
-(println (take 10 (recursive-file-seq (System/getProperty "user.home"))))
+(do (take 10 (recursive-file-seq (System/getProperty "user.home"))))
 
 (defn list-file-names
   "Returns a sequence of file and directory names within the given path."
@@ -25,7 +25,7 @@
        .list
        seq))
 
-(println (list-file-names (System/getProperty "user.home")))
+(do (list-file-names (System/getProperty "user.home")))
 
 (defn absolute-paths-in-dir
   "Returns a vector of absolute paths of all files and directories within the given directory."

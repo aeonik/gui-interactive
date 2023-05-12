@@ -1,0 +1,31 @@
+Why does e16 have no state or render?
+
+Why does e17 have no inputs?
+(defn dialog [_]
+  {:fx/type :dialog
+   :showing true
+   :on-hidden (fn [^DialogEvent e]
+                (condp = (.getButtonData ^ButtonType (.getResult ^Dialog (.getSource e)))
+                  ButtonBar$ButtonData/NO (reset! *state :select-action)
+                  ButtonBar$ButtonData/YES (reset! *state :confirmed)))
+   :dialog-pane {:fx/type :dialog-pane
+                 :header-text "Nuke launch confirmation dialog™"
+                 :content-text "Are you sure?"
+                 :expandable-content {:fx/type :label
+                                      :text "This action can't be undone."}
+                 :button-types [:no :yes]}})
+
+Why does e38 have middleware that looks like this?
+(def renderer
+  (fx/create-renderer
+    :middleware (fx/wrap-map-desc #'root-view)
+    :opts {:fx.opt/map-event-handler handle}))
+
+My main gui has this:
+(def renderer
+  (fx/create-renderer
+    :middleware (fx/wrap-map-desc (fn [state]
+                                    {:fx/type root-view
+                                     :state   state}))
+    :opts {:fx.opt/map-event-handler event-handler}))
+
