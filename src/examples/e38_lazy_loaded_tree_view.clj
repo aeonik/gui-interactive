@@ -1,6 +1,9 @@
 (ns examples.e38-lazy-loaded-tree-view
   (:require [cljfx.api :as fx]))
 
+(require '[flow-storm.api :as fs-api])
+
+(fs-api/local-connect)
 ;; Load tree items lazily by triggering loading when item is expanded
 
 (def *state
@@ -14,7 +17,8 @@
     *state
     #(-> %
          (update ::expanded (if event conj disj) id)
-         (cond-> (and event (not (get-in % [::tree id])))
+         (cond-> (and event
+                      (not (get-in % [::tree id])))
                  (assoc-in [::tree id]
                            ;; This is "lazy loading". Note: swap! fn might be retried,
                            ;; don't do side effects here in your app
@@ -26,7 +30,8 @@
                   :value id
                   :expanded (contains? expanded id)
                   :on-expanded-changed {:event/type ::on-expanded-changed :id id}
-                  :children (if (or (contains? expanded id) (tree id))
+                  :children (if (or (contains? expanded id)
+                                    (tree id))
                               (map ->desc (tree id))
                               ;; this is a dummy tree item that exists to make
                               ;; its parent show as expandable:
@@ -41,5 +46,7 @@
   (fx/create-renderer
     :middleware (fx/wrap-map-desc #'root-view)
     :opts {:fx.opt/map-event-handler handle}))
+
+(flow-storm.api/instrument-namespaces-clj #{"gui-interactive." "examples.e38-lazy-loaded-tree-view"})
 
 (fx/mount-renderer *state renderer)

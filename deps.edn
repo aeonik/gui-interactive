@@ -3,6 +3,7 @@
          org.clojure/clojure {:mvn/version "1.11.1"}
          org.clojure/tools.trace {:mvn/version "0.7.11"}
          cljfx/cljfx         {:mvn/version "1.7.22"}
+         babashka/fs {:mvn/version "0.4.18"}
          io.github.cljfx/dev {:mvn/version "1.0.36"}
          com.github.jpmonettas/flow-storm-dbg {:mvn/version "RELEASE"}
          aeonik/file_hasher {:git/url "https://github.com/aeonik/file_hasher.git"
@@ -15,4 +16,4 @@
                               com.github.jpmonettas/flow-storm-dbg {:mvn/version "RELEASE"}}
                  :jvm-opts ["-Dflowstorm.startRecording=true"
                             "-Dclojure.storm.instrumentEnable=true"
-                            "-Dclojure.storm.instrumentOnlyPrefixes=gui-interactive.,file-tree-view,cljfx."]}}}
+                            "-Dclojure.storm.instrumentOnlyPrefixes=user,gui-interactive.,examples.,file-tree-view"]}}}
