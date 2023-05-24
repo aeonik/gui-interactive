@@ -1,5 +1,6 @@
 (ns examples.e16-cell-factories
-  (:require [cljfx.api :as fx]))
+  (:require [babashka.fs :as fs]
+            [cljfx.api :as fx]))
 
 (def list-view
   {:fx/type :list-view
@@ -42,6 +43,9 @@
          (string? x) {:fx/type :tree-item :value x}
          (seqable? x) {:fx/type :tree-item :value x :children (map ->tree-item x)}
          :else {:fx/type :tree-item :value x}))
+
+(require '[clojure.java.io :as io])
+(->tree-item (file-seq (io/file "resources")))
 
 (def tree-table-view
   {:fx/type :tree-table-view

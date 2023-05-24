@@ -113,6 +113,7 @@
     <orderEntry type="library" name="Deps: org.apache.maven.resolver/maven-resolver-impl:1.8.2" level="project" />
     <orderEntry type="library" name="Deps: org.slf4j/slf4j-api:1.7.36" level="project" />
     <orderEntry type="library" name="Deps: org.apache.maven/maven-model:3.8.6" level="project" />
+    <orderEntry type="library" name="Deps: org.clj-commons/digest:1.4.100" level="project" />
     <orderEntry type="library" name="Deps: org.eclipse.sisu/org.eclipse.sisu.inject:0.3.5" level="project" />
     <orderEntry type="library" name="Deps: org.apache.maven.resolver/maven-resolver-util:1.8.2" level="project" />
     <orderEntry type="library" name="Deps: io.github.g00fy2/versioncompare:1.4.1" level="project" />

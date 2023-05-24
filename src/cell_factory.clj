@@ -1,5 +1,8 @@
 (ns cell_factory
-  (:require [cljfx.api :as fx]))
+  (:require [babashka.fs :as fs]
+            [cljfx.api :as fx]
+            [clj-commons.digest]
+            [clojure.java.io :as io]))
 
 (def list-view
   {:fx/type :list-view
@@ -56,19 +59,26 @@
                                                                 (keyword? x) "eaf"
                                                                 :else "#adf")}})}
    :columns [{:fx/type :tree-table-column
-              :text "pr-str"
-              :max-width 960/2
-              :cell-value-factory identity
+              :text "Name"
+              :cell-value-factory :name
               :cell-factory {:fx/cell-type :tree-table-cell
-                             :describe (fn [x]
-                                           {:text (pr-str x)})}}
+                             :describe (fn [{:keys [name]}] {:text name})}}
              {:fx/type :tree-table-column
-              :text "str"
-              :max-width 960/2
-              :cell-value-factory identity
+              :text "Size"
+              :cell-value-factory :size
               :cell-factory {:fx/cell-type :tree-table-cell
-                             :describe (fn [x]
-                                           {:text (str x)})}}]
+                             :describe (fn [{:keys [size]}] {:text (str size)})}}
+             {:fx/type :tree-table-column
+              :text "Attributes"
+              :cell-value-factory :attributes
+              :cell-factory {:fx/cell-type :tree-table-cell
+                             :describe (fn [{:keys [attributes]}] {:text (pr-str attributes)})}}
+             {:fx/type :tree-table-column
+              :text "Hash"
+              :cell-value-factory :hash
+              :cell-factory {:fx/cell-type :tree-table-cell
+                             :describe (fn [{:keys [hash]}] {:text hash})}}]
+
    :root (->tree-item
            {:set #{:a :b :c}
             :scalars ["string" false 1 1M 1/2 1.0 'symbol :keyword]
