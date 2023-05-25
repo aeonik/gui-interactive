@@ -22,7 +22,6 @@
 
 (file-info default-directory)
 
-
 (defn- ->tree-item [x]
   (cond
     (string? x) {:fx/type :tree-item :value x}
@@ -50,7 +49,6 @@
       (if (.isDirectory file)
         {path (map file->map (.listFiles file))}
         path))))
-
 
 (defn- map->tree-item [[value children]]
   (if (map? children)
@@ -88,15 +86,15 @@
    :root (root-dir->tree-item root-dir)})
 
 (fx/on-fx-thread
-  (fx/create-component
-    {:fx/type :stage
-     :showing true
-     :title   "Cell factory examples"
-     :scene   {:fx/type :scene
-               :root    {:fx/type     :tab-pane
-                         :pref-width  960
-                         :pref-height 540
-                         :tabs        [{:fx/type  :tab
-                                        :text     "Tree Table View"
-                                        :closable false
-                                        :content  tree-table-view}]}}}))
+ (fx/create-component
+  {:fx/type :stage
+   :showing true
+   :title   "Cell factory examples"
+   :scene   {:fx/type :scene
+             :root    {:fx/type     :tab-pane
+                       :pref-width  960
+                       :pref-height 540
+                       :tabs        [{:fx/type  :tab
+                                      :text     "Tree Table View"
+                                      :closable false
+                                      :content  tree-table-view}]}}}))
