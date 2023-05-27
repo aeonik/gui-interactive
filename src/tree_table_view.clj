@@ -27,13 +27,25 @@
 
 (defn- ->tree-item [x]
   (cond
-    (string? x) {:fx/type :tree-item :value x}
-    (seqable? x) {:fx/type :tree-item :value x :children (map ->tree-item x)}
+    (string? x) {:fx/type :tree-item :name x}
+    (seqable? x) {:fx/type :tree-item :name x :children (map ->tree-item x)}
     :else {:fx/type :tree-item :value x}))
+
+(defn- ->tree-item2 [x]
+  (if (contains? x :children)
+    {:fx/type :tree-item :value x :children (map ->tree-item2 (:children x))}
+    {:fx/type :tree-item :value x}))
+
+
 
 ;; Check if item if a file or a directory, check if the directory has children
 
 (def root-dir (file-seq (io/file "resources")))
+
+(->tree-item2 (file-info default-directory))
+
+(->tree-item (map #(.getPath %)
+                  (file-seq (clojure.java.io/file "resources"))))
 
 (map fs/file-name root-dir)
 
@@ -69,32 +81,32 @@
 
 ;; TODO: Need to change the :root object to a function that has a tree structure with :children
 (def tree-table-view
-  {:fx/type :tree-table-view
+  {:fx/type     :tree-table-view
    :row-factory {:fx/cell-type :tree-table-row
-                 :describe (fn [x]
-                             {:style {:-fx-background-color (cond
-                                                              (number? x) "#99f"
-                                                              (string? x) "#cfa"
-                                                              (map? x) "fda"
-                                                              (set? x) :pink
-                                                              (coll? x) "#faa"
-                                                              (keyword? x) "eaf"
-                                                              :else "#adf")}})}
-   :columns [{:fx/type :tree-table-column
-              :text "pr-str"
-              :max-width 960/2
-              :cell-value-factory identity
-              :cell-factory {:fx/cell-type :tree-table-cell
-                             :describe (fn [x]
-                                         {:text (fs/file-name x)})}}
-             {:fx/type :tree-table-column
-              :text "str"
-              :max-width 960/2
-              :cell-value-factory identity
-              :cell-factory {:fx/cell-type :tree-table-cell
-                             :describe (fn [x]
-                                         {:text (str x)})}}]
-   :root (->tree-item root-dir)})
+                 :describe     (fn [x]
+                                 {:style {:-fx-background-color (cond
+                                                                  (number? x) "#99f"
+                                                                  (string? x) :gray
+                                                                  (map? x) "fda"
+                                                                  (set? x) :pink
+                                                                  (coll? x) "#faa"
+                                                                  (keyword? x) "eaf"
+                                                                  :else "#adf")}})}
+   :columns     [{:fx/type            :tree-table-column
+                  :text               "File Name"
+                  :max-width          960/2
+                  :cell-value-factory identity
+                  :cell-factory       {:fx/cell-type :tree-table-cell
+                                       :describe     (fn [x]
+                                                       {:text x})}}
+                 {:fx/type            :tree-table-column
+                  :text               "str"
+                  :max-width          960/2
+                  :cell-value-factory identity
+                  :cell-factory       {:fx/cell-type :tree-table-cell
+                                       :describe     (fn [x]
+                                                       {:text x})}}]
+   :root        (->tree-item2 (file-info default-directory))})
 
 (def image-url (-> "frog2.png" io/resource .toString))
 (def image (Image. image-url))
