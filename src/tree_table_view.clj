@@ -2,7 +2,10 @@
   (:require [babashka.fs :as fs]
             [cljfx.api :as fx]
             [clj-commons.digest]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io])
+  (:import (java.awt Taskbar)
+           (javafx.scene.image Image)
+           (javax.imageio ImageIO)))
 
 (def default-directory (fs/path "resources"))
 
@@ -85,16 +88,26 @@
                                          {:text (str x)})}}]
    :root (root-dir->tree-item root-dir)})
 
+(def image-url (-> "frog2.png" io/resource .toString))
+(def image (Image. image-url))
+(when (.startsWith (System/getProperty "os.name") "Mac")
+  (try
+    (let [awt-image (ImageIO/read (io/input-stream (io/resource "frog2.png")))]
+      (.setIconImage (Taskbar/getTaskbar) awt-image))
+    (catch Exception e
+      (println "Failed to set dock icon"))))
+
 (fx/on-fx-thread
  (fx/create-component
-  {:fx/type :stage
-   :showing true
-   :title   "Cell factory examples"
-   :scene   {:fx/type :scene
-             :root    {:fx/type     :tab-pane
-                       :pref-width  960
-                       :pref-height 540
-                       :tabs        [{:fx/type  :tab
-                                      :text     "Tree Table View"
-                                      :closable false
-                                      :content  tree-table-view}]}}}))
+   {:fx/type :stage
+    :showing true
+    :title   "Cell factory examples"
+    :icons   [image]
+    :scene   {:fx/type :scene
+              :root    {:fx/type     :tab-pane
+                        :pref-width  960
+                        :pref-height 540
+                        :tabs        [{:fx/type  :tab
+                                       :text     "Tree Table View"
+                                       :closable false
+                                       :content  tree-table-view}]}}}))
