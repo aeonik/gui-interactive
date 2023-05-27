@@ -31,6 +31,7 @@
     (seqable? x) {:fx/type :tree-item :name x :children (map ->tree-item x)}
     :else {:fx/type :tree-item :value x}))
 
+;; TODO: Make this function return the entire map, but make sure it still works with the cljfx tree
 (defn- ->tree-item2 [x]
   (if (contains? x :children)
     {:fx/type :tree-item :value (:name x) :children (map ->tree-item2 (:children x))}
