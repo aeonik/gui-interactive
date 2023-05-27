@@ -33,8 +33,8 @@
 
 (defn- ->tree-item2 [x]
   (if (contains? x :children)
-    {:fx/type :tree-item :value x :children (map ->tree-item2 (:children x))}
-    {:fx/type :tree-item :value x}))
+    {:fx/type :tree-item :value (:name x) :children (map ->tree-item2 (:children x))}
+    {:fx/type :tree-item :value (:name x)}))
 
 
 
