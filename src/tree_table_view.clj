@@ -67,6 +67,7 @@
 
 (->tree-item root-dir)
 
+;; TODO: Need to change the :root object to a function that has a tree structure with :children
 (def tree-table-view
   {:fx/type :tree-table-view
    :row-factory {:fx/cell-type :tree-table-row
