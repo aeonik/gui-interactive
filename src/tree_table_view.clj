@@ -31,11 +31,10 @@
     (seqable? x) {:fx/type :tree-item :name x :children (map ->tree-item x)}
     :else {:fx/type :tree-item :value x}))
 
-;; TODO: Make this function return the entire map, but make sure it still works with the cljfx tree
 (defn- ->tree-item2 [x]
   (if (contains? x :children)
-    {:fx/type :tree-item :value (:name x) :children (map ->tree-item2 (:children x))}
-    {:fx/type :tree-item :value (:name x)}))
+    {:fx/type :tree-item :value x :children (map ->tree-item2 (:children x))}
+    {:fx/type :tree-item :value x}))
 
 
 
@@ -80,7 +79,6 @@
 
 (->tree-item root-dir)
 
-;; TODO: Need to change the :root object to a function that has a tree structure with :children
 (def tree-table-view
   {:fx/type     :tree-table-view
    :row-factory {:fx/cell-type :tree-table-row
@@ -99,14 +97,14 @@
                   :cell-value-factory identity
                   :cell-factory       {:fx/cell-type :tree-table-cell
                                        :describe     (fn [x]
-                                                       {:text x})}}
+                                                       {:text (:name x)})}}
                  {:fx/type            :tree-table-column
-                  :text               "str"
+                  :text               "Size"
                   :max-width          960/2
                   :cell-value-factory identity
                   :cell-factory       {:fx/cell-type :tree-table-cell
                                        :describe     (fn [x]
-                                                       {:text x})}}]
+                                                       {:text (str (:size x))})}}]
    :root        (->tree-item2 (file-info default-directory))})
 
 (def image-url (-> "frog2.png" io/resource .toString))
