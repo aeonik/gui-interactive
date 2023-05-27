@@ -35,6 +35,8 @@
 
 (def root-dir (file-seq (io/file "resources")))
 
+(map fs/file-name root-dir)
+
 (comment (defn- ->tree-item [x]
            (let [is-dir?  (.isDirectory x)
                  children (if is-dir? (seq (.listFiles x)) [])]
@@ -53,6 +55,8 @@
         {path (map file->map (.listFiles file))}
         path))))
 
+(map file->map (->tree-item root-dir))
+
 (defn- map->tree-item [[value children]]
   (if (map? children)
     {:fx/type :tree-item :value value :children (map map->tree-item children)}
@@ -60,6 +64,9 @@
 
 (defn- root-dir->tree-item [root-dir]
   (-> root-dir file->map map->tree-item))
+
+(->tree-item root-dir)
+
 (def tree-table-view
   {:fx/type :tree-table-view
    :row-factory {:fx/cell-type :tree-table-row
@@ -78,7 +85,7 @@
               :cell-value-factory identity
               :cell-factory {:fx/cell-type :tree-table-cell
                              :describe (fn [x]
-                                         {:text (pr-str x)})}}
+                                         {:text (fs/file-name x)})}}
              {:fx/type :tree-table-column
               :text "str"
               :max-width 960/2
@@ -86,7 +93,7 @@
               :cell-factory {:fx/cell-type :tree-table-cell
                              :describe (fn [x]
                                          {:text (str x)})}}]
-   :root (root-dir->tree-item root-dir)})
+   :root (->tree-item root-dir)})
 
 (def image-url (-> "frog2.png" io/resource .toString))
 (def image (Image. image-url))
