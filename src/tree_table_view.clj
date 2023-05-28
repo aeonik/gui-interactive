@@ -45,7 +45,7 @@
                           (map ->tree-item children)
                           ())})))
 
-(->tree-item root-dir)
+;(->tree-item root-dir)
 
 (defn- file->map [file]
   (when (instance? java.io.File file)
@@ -54,7 +54,7 @@
         {path (map file->map (.listFiles file))}
         path))))
 
-(map file->map (->tree-item root-dir))
+;(map file->map (->tree-item root-dir))
 
 (defn- map->tree-item [[value children]]
   (if (map? children)
@@ -64,7 +64,7 @@
 (defn- root-dir->tree-item [root-dir]
   (-> root-dir file->map map->tree-item))
 
-(->tree-item root-dir)
+;(->tree-item root-dir)
 
 (def tree-table-view
   {:fx/type     :tree-table-view
@@ -92,7 +92,7 @@
                   :cell-factory       {:fx/cell-type :tree-table-cell
                                        :describe     (fn [x]
                                                        {:text (str (:size x))})}}]
-   :root        (->tree-item2 (file-info default-directory))})
+   :root        (->tree-item (file-info default-directory))})
 
 (def image-url (-> "frog2.png" io/resource .toString))
 (def image (Image. image-url))
