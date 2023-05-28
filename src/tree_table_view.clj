@@ -26,26 +26,13 @@
 (file-info default-directory)
 
 (defn- ->tree-item [x]
-  (cond
-    (string? x) {:fx/type :tree-item :name x}
-    (seqable? x) {:fx/type :tree-item :name x :children (map ->tree-item x)}
-    :else {:fx/type :tree-item :value x}))
-
-(defn- ->tree-item2 [x]
   (if (contains? x :children)
-    {:fx/type :tree-item :value x :children (map ->tree-item2 (:children x))}
+    {:fx/type :tree-item :value x :children (map ->tree-item (:children x))}
     {:fx/type :tree-item :value x}))
-
-
-
-;; Check if item if a file or a directory, check if the directory has children
 
 (def root-dir (file-seq (io/file "resources")))
 
-(->tree-item2 (file-info default-directory))
-
-(->tree-item (map #(.getPath %)
-                  (file-seq (clojure.java.io/file "resources"))))
+(->tree-item (file-info default-directory))
 
 (map fs/file-name root-dir)
 

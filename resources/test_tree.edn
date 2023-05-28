@@ -1,0 +1,428 @@
+{:name "resources",
+ :value #object[sun.nio.fs.UnixPath 0x6f3fc94b "resources"],
+ :size 288,
+ :attributes {:creationTime #object[java.nio.file.attribute.FileTime 0x6793e5e1 "2023-05-14T16:19:19Z"],
+              :isSymbolicLink false,
+              :isOther false,
+              :permissions #{#object[java.nio.file.attribute.PosixFilePermission 0x435ff28f "OWNER_READ"]
+                             #object[java.nio.file.attribute.PosixFilePermission 0x28c1f353 "GROUP_READ"]
+                             #object[java.nio.file.attribute.PosixFilePermission 0x4f0dd8e9 "OWNER_WRITE"]
+                             #object[java.nio.file.attribute.PosixFilePermission 0x6020bf44 "OTHERS_EXECUTE"]
+                             #object[java.nio.file.attribute.PosixFilePermission 0x1436b74e "GROUP_EXECUTE"]
+                             #object[java.nio.file.attribute.PosixFilePermission 0x355defb1 "OTHERS_READ"]
+                             #object[java.nio.file.attribute.PosixFilePermission 0x3edd6eb0 "OWNER_EXECUTE"]},
+              :lastAccessTime #object[java.nio.file.attribute.FileTime 0x25968360 "2023-05-27T14:05:03.034336765Z"],
+              :group #object[sun.nio.fs.UnixUserPrincipals$Group 0x34727308 "staff"],
+              :isRegularFile false,
+              :size 288,
+              :lastModifiedTime #object[java.nio.file.attribute.FileTime 0x4c36248a "2023-05-27T14:05:03.030716723Z"],
+              :fileKey #object[sun.nio.fs.UnixFileKey 0x78143c97 "(dev=1000012,ino=69403923)"],
+              :isDirectory true,
+              :owner #object[sun.nio.fs.UnixUserPrincipals$User 0x69882d76 "davidconnett"]},
+ :hash nil,
+ :children ({:name "test",
+             :value #object[sun.nio.fs.UnixPath 0x42488797 "resources/test"],
+             :size 192,
+             :attributes {:creationTime #object[java.nio.file.attribute.FileTime 0x23a718ab "2023-05-14T16:19:19Z"],
+                          :isSymbolicLink false,
+                          :isOther false,
+                          :permissions #{#object[java.nio.file.attribute.PosixFilePermission 0x435ff28f "OWNER_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x28c1f353 "GROUP_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x4f0dd8e9 "OWNER_WRITE"]
+                                         #object[java.nio.file.attribute.PosixFilePermission
+                                                 0x6020bf44
+                                                 "OTHERS_EXECUTE"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x1436b74e "GROUP_EXECUTE"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x355defb1 "OTHERS_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x3edd6eb0 "OWNER_EXECUTE"]},
+                          :lastAccessTime #object[java.nio.file.attribute.FileTime
+                                                  0x4458c2d3
+                                                  "2023-05-14T20:09:12.724333219Z"],
+                          :group #object[sun.nio.fs.UnixUserPrincipals$Group 0x318f6c70 "staff"],
+                          :isRegularFile false,
+                          :size 192,
+                          :lastModifiedTime #object[java.nio.file.attribute.FileTime
+                                                    0x377d31e9
+                                                    "2023-05-14T20:09:12.118243067Z"],
+                          :fileKey #object[sun.nio.fs.UnixFileKey 0x2c8415ed "(dev=1000012,ino=69403924)"],
+                          :isDirectory true,
+                          :owner #object[sun.nio.fs.UnixUserPrincipals$User 0x2ec814f4 "davidconnett"]},
+             :hash nil,
+             :children ({:name "test2-file",
+                         :value #object[sun.nio.fs.UnixPath 0x64ee01b1 "resources/test/test2-file"],
+                         :size 0,
+                         :attributes {:creationTime #object[java.nio.file.attribute.FileTime
+                                                            0x3ac286bc
+                                                            "2023-05-14T16:19:19Z"],
+                                      :isSymbolicLink false,
+                                      :isOther false,
+                                      :permissions #{#object[java.nio.file.attribute.PosixFilePermission
+                                                             0x435ff28f
+                                                             "OWNER_READ"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x28c1f353
+                                                             "GROUP_READ"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x4f0dd8e9
+                                                             "OWNER_WRITE"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x355defb1
+                                                             "OTHERS_READ"]},
+                                      :lastAccessTime #object[java.nio.file.attribute.FileTime
+                                                              0x3665c774
+                                                              "2023-05-14T16:19:19.872286065Z"],
+                                      :group #object[sun.nio.fs.UnixUserPrincipals$Group 0x58e41af8 "staff"],
+                                      :isRegularFile true,
+                                      :size 0,
+                                      :lastModifiedTime #object[java.nio.file.attribute.FileTime
+                                                                0x4c136bdc
+                                                                "2023-05-14T16:19:19.872286065Z"],
+                                      :fileKey #object[sun.nio.fs.UnixFileKey 0x624ae384 "(dev=1000012,ino=69403928)"],
+                                      :isDirectory false,
+                                      :owner #object[sun.nio.fs.UnixUserPrincipals$User 0x7a0cd6de "davidconnett"]},
+                         :hash "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+                        {:name "test1-file",
+                         :value #object[sun.nio.fs.UnixPath 0x2c730bd "resources/test/test1-file"],
+                         :size 0,
+                         :attributes {:creationTime #object[java.nio.file.attribute.FileTime
+                                                            0x55dde6b2
+                                                            "2023-05-14T16:19:19Z"],
+                                      :isSymbolicLink false,
+                                      :isOther false,
+                                      :permissions #{#object[java.nio.file.attribute.PosixFilePermission
+                                                             0x435ff28f
+                                                             "OWNER_READ"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x28c1f353
+                                                             "GROUP_READ"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x4f0dd8e9
+                                                             "OWNER_WRITE"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x355defb1
+                                                             "OTHERS_READ"]},
+                                      :lastAccessTime #object[java.nio.file.attribute.FileTime
+                                                              0x60be694e
+                                                              "2023-05-14T16:19:19.872193523Z"],
+                                      :group #object[sun.nio.fs.UnixUserPrincipals$Group 0x7c18e9a1 "staff"],
+                                      :isRegularFile true,
+                                      :size 0,
+                                      :lastModifiedTime #object[java.nio.file.attribute.FileTime
+                                                                0x47e16c47
+                                                                "2023-05-14T16:19:19.872193523Z"],
+                                      :fileKey #object[sun.nio.fs.UnixFileKey 0x7d33fa7f "(dev=1000012,ino=69403925)"],
+                                      :isDirectory false,
+                                      :owner #object[sun.nio.fs.UnixUserPrincipals$User 0x6ed4188e "davidconnett"]},
+                         :hash "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+                        {:name "test-dir2",
+                         :value #object[sun.nio.fs.UnixPath 0x55baa114 "resources/test/test-dir2"],
+                         :size 64,
+                         :attributes {:creationTime #object[java.nio.file.attribute.FileTime
+                                                            0x19757cb0
+                                                            "2023-05-14T20:07:03Z"],
+                                      :isSymbolicLink false,
+                                      :isOther false,
+                                      :permissions #{#object[java.nio.file.attribute.PosixFilePermission
+                                                             0x435ff28f
+                                                             "OWNER_READ"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x28c1f353
+                                                             "GROUP_READ"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x4f0dd8e9
+                                                             "OWNER_WRITE"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x6020bf44
+                                                             "OTHERS_EXECUTE"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x1436b74e
+                                                             "GROUP_EXECUTE"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x355defb1
+                                                             "OTHERS_READ"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x3edd6eb0
+                                                             "OWNER_EXECUTE"]},
+                                      :lastAccessTime #object[java.nio.file.attribute.FileTime
+                                                              0x7b779de3
+                                                              "2023-05-14T20:07:03.153239124Z"],
+                                      :group #object[sun.nio.fs.UnixUserPrincipals$Group 0x35a9fa6b "staff"],
+                                      :isRegularFile false,
+                                      :size 64,
+                                      :lastModifiedTime #object[java.nio.file.attribute.FileTime
+                                                                0x359b4fcb
+                                                                "2023-05-14T20:07:03.153239124Z"],
+                                      :fileKey #object[sun.nio.fs.UnixFileKey 0x7b93534 "(dev=1000012,ino=69427690)"],
+                                      :isDirectory true,
+                                      :owner #object[sun.nio.fs.UnixUserPrincipals$User 0x406628a5 "davidconnett"]},
+                         :hash nil,
+                         :children ()}
+                        {:name "test-dir",
+                         :value #object[sun.nio.fs.UnixPath 0x3a66f860 "resources/test/test-dir"],
+                         :size 96,
+                         :attributes {:creationTime #object[java.nio.file.attribute.FileTime
+                                                            0x55ec0df0
+                                                            "2023-05-14T16:19:19Z"],
+                                      :isSymbolicLink false,
+                                      :isOther false,
+                                      :permissions #{#object[java.nio.file.attribute.PosixFilePermission
+                                                             0x435ff28f
+                                                             "OWNER_READ"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x28c1f353
+                                                             "GROUP_READ"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x4f0dd8e9
+                                                             "OWNER_WRITE"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x6020bf44
+                                                             "OTHERS_EXECUTE"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x1436b74e
+                                                             "GROUP_EXECUTE"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x355defb1
+                                                             "OTHERS_READ"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x3edd6eb0
+                                                             "OWNER_EXECUTE"]},
+                                      :lastAccessTime #object[java.nio.file.attribute.FileTime
+                                                              0x1b3282ec
+                                                              "2023-05-14T16:26:09.072603727Z"],
+                                      :group #object[sun.nio.fs.UnixUserPrincipals$Group 0x6a60b22f "staff"],
+                                      :isRegularFile false,
+                                      :size 96,
+                                      :lastModifiedTime #object[java.nio.file.attribute.FileTime
+                                                                0x67c8f2fb
+                                                                "2023-05-14T16:19:19.872259774Z"],
+                                      :fileKey #object[sun.nio.fs.UnixFileKey 0x527ee07f "(dev=1000012,ino=69403926)"],
+                                      :isDirectory true,
+                                      :owner #object[sun.nio.fs.UnixUserPrincipals$User 0x5d543d3e "davidconnett"]},
+                         :hash nil,
+                         :children ({:name "test2-file",
+                                     :value #object[sun.nio.fs.UnixPath 0x324a1d71 "resources/test/test-dir/test2-file"],
+                                     :size 0,
+                                     :attributes {:creationTime #object[java.nio.file.attribute.FileTime
+                                                                        0x12b56ee9
+                                                                        "2023-05-14T16:19:19Z"],
+                                                  :isSymbolicLink false,
+                                                  :isOther false,
+                                                  :permissions #{#object[java.nio.file.attribute.PosixFilePermission
+                                                                         0x435ff28f
+                                                                         "OWNER_READ"]
+                                                                 #object[java.nio.file.attribute.PosixFilePermission
+                                                                         0x28c1f353
+                                                                         "GROUP_READ"]
+                                                                 #object[java.nio.file.attribute.PosixFilePermission
+                                                                         0x4f0dd8e9
+                                                                         "OWNER_WRITE"]
+                                                                 #object[java.nio.file.attribute.PosixFilePermission
+                                                                         0x355defb1
+                                                                         "OTHERS_READ"]},
+                                                  :lastAccessTime #object[java.nio.file.attribute.FileTime
+                                                                          0x37ed19d8
+                                                                          "2023-05-14T16:19:19.872253565Z"],
+                                                  :group #object[sun.nio.fs.UnixUserPrincipals$Group 0x4b2c7fd6 "staff"],
+                                                  :isRegularFile true,
+                                                  :size 0,
+                                                  :lastModifiedTime #object[java.nio.file.attribute.FileTime
+                                                                            0x29ef5257
+                                                                            "2023-05-14T16:19:19.872253565Z"],
+                                                  :fileKey #object[sun.nio.fs.UnixFileKey
+                                                                   0x1014a3a5
+                                                                   "(dev=1000012,ino=69403927)"],
+                                                  :isDirectory false,
+                                                  :owner #object[sun.nio.fs.UnixUserPrincipals$User
+                                                                 0x4fe84ba6
+                                                                 "davidconnett"]},
+                                     :hash "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"})})}
+            {:name "8e302d4c29383e67f90d6daace129b72c9ba2cdb_2000x2000.webp",
+             :value #object[sun.nio.fs.UnixPath
+                            0x67925f42
+                            "resources/8e302d4c29383e67f90d6daace129b72c9ba2cdb_2000x2000.webp"],
+             :size 38860,
+             :attributes {:creationTime #object[java.nio.file.attribute.FileTime 0x343cd40d "2023-05-27T14:01:47Z"],
+                          :isSymbolicLink false,
+                          :isOther false,
+                          :permissions #{#object[java.nio.file.attribute.PosixFilePermission 0x435ff28f "OWNER_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x28c1f353 "GROUP_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x4f0dd8e9 "OWNER_WRITE"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x355defb1 "OTHERS_READ"]},
+                          :lastAccessTime #object[java.nio.file.attribute.FileTime
+                                                  0x10050a4
+                                                  "2023-05-27T14:28:57.412293046Z"],
+                          :group #object[sun.nio.fs.UnixUserPrincipals$Group 0xcb89e59 "staff"],
+                          :isRegularFile true,
+                          :size 38860,
+                          :lastModifiedTime #object[java.nio.file.attribute.FileTime
+                                                    0x79a5b8c3
+                                                    "2023-05-27T14:01:47.304552644Z"],
+                          :fileKey #object[sun.nio.fs.UnixFileKey 0x2beb9746 "(dev=1000012,ino=70772790)"],
+                          :isDirectory false,
+                          :owner #object[sun.nio.fs.UnixUserPrincipals$User 0x286d77ef "davidconnett"]},
+             :hash "6d70caa1db481daa147807be56a9c9a8d49157289de54d41b9a2ad4aee30eb83"}
+            {:name "c18e010467f4afaf3f7d42d6b8a3ad2598fe9b42_2000x2000.webp",
+             :value #object[sun.nio.fs.UnixPath
+                            0x60ef7eed
+                            "resources/c18e010467f4afaf3f7d42d6b8a3ad2598fe9b42_2000x2000.webp"],
+             :size 31468,
+             :attributes {:creationTime #object[java.nio.file.attribute.FileTime 0x34d8b193 "2023-05-27T14:03:21Z"],
+                          :isSymbolicLink false,
+                          :isOther false,
+                          :permissions #{#object[java.nio.file.attribute.PosixFilePermission 0x435ff28f "OWNER_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x28c1f353 "GROUP_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x4f0dd8e9 "OWNER_WRITE"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x355defb1 "OTHERS_READ"]},
+                          :lastAccessTime #object[java.nio.file.attribute.FileTime
+                                                  0x437e41e9
+                                                  "2023-05-27T14:28:39.302898056Z"],
+                          :group #object[sun.nio.fs.UnixUserPrincipals$Group 0x6f8466 "staff"],
+                          :isRegularFile true,
+                          :size 31468,
+                          :lastModifiedTime #object[java.nio.file.attribute.FileTime
+                                                    0x1b6c8a90
+                                                    "2023-05-27T14:03:21.60555775Z"],
+                          :fileKey #object[sun.nio.fs.UnixFileKey 0x6ac9f447 "(dev=1000012,ino=70772955)"],
+                          :isDirectory false,
+                          :owner #object[sun.nio.fs.UnixUserPrincipals$User 0x5b8991fe "davidconnett"]},
+             :hash "757624d608fdb79048ecbb77c6fe08299729ee48daa11e58ff2dadd363870614"}
+            {:name "frog2.png",
+             :value #object[sun.nio.fs.UnixPath 0x27b9725d "resources/frog2.png"],
+             :size 473737,
+             :attributes {:creationTime #object[java.nio.file.attribute.FileTime 0x58fe5430 "2023-05-27T14:05:03Z"],
+                          :isSymbolicLink false,
+                          :isOther false,
+                          :permissions #{#object[java.nio.file.attribute.PosixFilePermission 0x435ff28f "OWNER_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x28c1f353 "GROUP_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x4f0dd8e9 "OWNER_WRITE"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x355defb1 "OTHERS_READ"]},
+                          :lastAccessTime #object[java.nio.file.attribute.FileTime
+                                                  0x7d30e8a4
+                                                  "2023-05-27T14:28:57.431240543Z"],
+                          :group #object[sun.nio.fs.UnixUserPrincipals$Group 0x6aa1809d "staff"],
+                          :isRegularFile true,
+                          :size 473737,
+                          :lastModifiedTime #object[java.nio.file.attribute.FileTime
+                                                    0x6e62c0e
+                                                    "2023-05-27T14:05:03.030848932Z"],
+                          :fileKey #object[sun.nio.fs.UnixFileKey 0x2c93b736 "(dev=1000012,ino=70773341)"],
+                          :isDirectory false,
+                          :owner #object[sun.nio.fs.UnixUserPrincipals$User 0x561c1fc8 "davidconnett"]},
+             :hash "8721f3652e05505c1134ccfbba39d3ad67871990dea89dffedd3d00c11b3cd78"}
+            {:name "frog.png",
+             :value #object[sun.nio.fs.UnixPath 0x305fd8fe "resources/frog.png"],
+             :size 456666,
+             :attributes {:creationTime #object[java.nio.file.attribute.FileTime 0x76e14a7 "2023-05-27T14:04:30Z"],
+                          :isSymbolicLink false,
+                          :isOther false,
+                          :permissions #{#object[java.nio.file.attribute.PosixFilePermission 0x435ff28f "OWNER_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x28c1f353 "GROUP_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x4f0dd8e9 "OWNER_WRITE"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x355defb1 "OTHERS_READ"]},
+                          :lastAccessTime #object[java.nio.file.attribute.FileTime
+                                                  0x3675397b
+                                                  "2023-05-27T14:28:57.41529283Z"],
+                          :group #object[sun.nio.fs.UnixUserPrincipals$Group 0x218222 "staff"],
+                          :isRegularFile true,
+                          :size 456666,
+                          :lastModifiedTime #object[java.nio.file.attribute.FileTime
+                                                    0x4ef722f0
+                                                    "2023-05-27T14:04:30.659130465Z"],
+                          :fileKey #object[sun.nio.fs.UnixFileKey 0x394bdca5 "(dev=1000012,ino=70773317)"],
+                          :isDirectory false,
+                          :owner #object[sun.nio.fs.UnixUserPrincipals$User 0x266a9416 "davidconnett"]},
+             :hash "1cc76e2c08a3d9b9e6f2ea7e66e9cbbb8cde34d39579ba72d44c1a9b2b1e1db9"}
+            {:name "test2",
+             :value #object[sun.nio.fs.UnixPath 0x2ad6326b "resources/test2"],
+             :size 96,
+             :attributes {:creationTime #object[java.nio.file.attribute.FileTime 0x5d416563 "2023-05-14T18:38:18Z"],
+                          :isSymbolicLink false,
+                          :isOther false,
+                          :permissions #{#object[java.nio.file.attribute.PosixFilePermission 0x435ff28f "OWNER_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x28c1f353 "GROUP_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x4f0dd8e9 "OWNER_WRITE"]
+                                         #object[java.nio.file.attribute.PosixFilePermission
+                                                 0x6020bf44
+                                                 "OTHERS_EXECUTE"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x1436b74e "GROUP_EXECUTE"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x355defb1 "OTHERS_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x3edd6eb0 "OWNER_EXECUTE"]},
+                          :lastAccessTime #object[java.nio.file.attribute.FileTime
+                                                  0x3a08249a
+                                                  "2023-05-14T20:14:49.120579211Z"],
+                          :group #object[sun.nio.fs.UnixUserPrincipals$Group 0x48b0cde9 "staff"],
+                          :isRegularFile false,
+                          :size 96,
+                          :lastModifiedTime #object[java.nio.file.attribute.FileTime
+                                                    0x53eeebfe
+                                                    "2023-05-14T20:08:38.92436954Z"],
+                          :fileKey #object[sun.nio.fs.UnixFileKey 0x552f69d "(dev=1000012,ino=69420455)"],
+                          :isDirectory true,
+                          :owner #object[sun.nio.fs.UnixUserPrincipals$User 0x7e053e59 "davidconnett"]},
+             :hash nil,
+             :children ({:name "test2-dir",
+                         :value #object[sun.nio.fs.UnixPath 0x30147bf5 "resources/test2/test2-dir"],
+                         :size 64,
+                         :attributes {:creationTime #object[java.nio.file.attribute.FileTime
+                                                            0x1481d712
+                                                            "2023-05-14T20:08:38Z"],
+                                      :isSymbolicLink false,
+                                      :isOther false,
+                                      :permissions #{#object[java.nio.file.attribute.PosixFilePermission
+                                                             0x435ff28f
+                                                             "OWNER_READ"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x28c1f353
+                                                             "GROUP_READ"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x4f0dd8e9
+                                                             "OWNER_WRITE"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x6020bf44
+                                                             "OTHERS_EXECUTE"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x1436b74e
+                                                             "GROUP_EXECUTE"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x355defb1
+                                                             "OTHERS_READ"]
+                                                     #object[java.nio.file.attribute.PosixFilePermission
+                                                             0x3edd6eb0
+                                                             "OWNER_EXECUTE"]},
+                                      :lastAccessTime #object[java.nio.file.attribute.FileTime
+                                                              0x6752d01
+                                                              "2023-05-14T20:08:38.924339874Z"],
+                                      :group #object[sun.nio.fs.UnixUserPrincipals$Group 0x51552c60 "staff"],
+                                      :isRegularFile false,
+                                      :size 64,
+                                      :lastModifiedTime #object[java.nio.file.attribute.FileTime
+                                                                0x420d2e6c
+                                                                "2023-05-14T20:08:38.924339874Z"],
+                                      :fileKey #object[sun.nio.fs.UnixFileKey 0x582e5878 "(dev=1000012,ino=69427807)"],
+                                      :isDirectory true,
+                                      :owner #object[sun.nio.fs.UnixUserPrincipals$User 0x779c6b59 "davidconnett"]},
+                         :hash nil,
+                         :children ()})}
+            {:name "test-file",
+             :value #object[sun.nio.fs.UnixPath 0xfd26fe6 "resources/test-file"],
+             :size 0,
+             :attributes {:creationTime #object[java.nio.file.attribute.FileTime 0x24874e3e "2023-05-27T13:00:29Z"],
+                          :isSymbolicLink false,
+                          :isOther false,
+                          :permissions #{#object[java.nio.file.attribute.PosixFilePermission 0x435ff28f "OWNER_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x28c1f353 "GROUP_READ"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x4f0dd8e9 "OWNER_WRITE"]
+                                         #object[java.nio.file.attribute.PosixFilePermission 0x355defb1 "OTHERS_READ"]},
+                          :lastAccessTime #object[java.nio.file.attribute.FileTime
+                                                  0xe402f4e
+                                                  "2023-05-27T13:00:29.433170587Z"],
+                          :group #object[sun.nio.fs.UnixUserPrincipals$Group 0x1a925b7c "staff"],
+                          :isRegularFile true,
+                          :size 0,
+                          :lastModifiedTime #object[java.nio.file.attribute.FileTime
+                                                    0x623ba97
+                                                    "2023-05-27T13:00:29.433170587Z"],
+                          :fileKey #object[sun.nio.fs.UnixFileKey 0x184be2d3 "(dev=1000012,ino=70769499)"],
+                          :isDirectory false,
+                          :owner #object[sun.nio.fs.UnixUserPrincipals$User 0x17fe84cb "davidconnett"]},
+             :hash "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"})}
