@@ -91,7 +91,14 @@
                   :cell-value-factory identity
                   :cell-factory       {:fx/cell-type :tree-table-cell
                                        :describe     (fn [x]
-                                                       {:text (str (:size x))})}}]
+                                                       {:text (str (:size x))})}}
+                 {:fx/type            :tree-table-column
+                  :text               "Hash"
+                  :max-width          960/2
+                  :cell-value-factory identity
+                  :cell-factory       {:fx/cell-type :tree-table-cell
+                                       :describe     (fn [x]
+                                                       {:text (str (:hash x))})}}]
    :root        (->tree-item (file-info default-directory))})
 
 (def image-url (-> "frog2.png" io/resource .toString))
