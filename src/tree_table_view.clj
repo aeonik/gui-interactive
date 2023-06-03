@@ -14,12 +14,10 @@
 
 (compute-file-hash (fs/path "resources/frog.png"))
 
-
 (defn combine-hashes
   "Combine a list of hashes into a single hash."
   [hashes]
   (clj-commons.digest/digest "sha-256" (apply str hashes)))
-
 
 (defn hex->bytes
   "Convert a hex string to a byte array."
@@ -27,15 +25,13 @@
   (byte-array
     (map #(Integer/parseInt (apply str %) 16)
          (partition 2 (seq s)))))
+
 (defn combine-hashes
   "Combine a list of hex-encoded hashes into a single hash."
   [hashes]
   (clj-commons.digest/digest "sha-256" (byte-array (mapcat hex->bytes hashes))))
 (combine-hashes [(compute-file-hash (fs/path "resources/frog.png"))
                  (compute-file-hash (fs/path "resources/frog.png"))])
-
-
-
 
 (defn file-info [file-path]
   (let [base-map {:name       (fs/file-name file-path)
@@ -66,8 +62,6 @@
     (if children
       (assoc base-map :children children)
       base-map)))
-
-
 
 (file-info default-directory)
 
@@ -144,7 +138,9 @@
    :root        (->tree-item (file-info default-directory))})
 
 (def image-url (-> "frog2.png" io/resource .toString))
+
 (def image (Image. image-url))
+
 (when (.startsWith (System/getProperty "os.name") "Mac")
   (try
     (let [awt-image (ImageIO/read (io/input-stream (io/resource "frog2.png")))]
