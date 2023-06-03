@@ -10,7 +10,32 @@
 (def default-directory (fs/path "resources"))
 
 (defn compute-file-hash [file-path]
-  (clj-commons.digest/sha-256 (fs/file file-path)))
+  (clj-commons.digest/digest "sha-256" (fs/file file-path)))
+
+(compute-file-hash (fs/path "resources/frog.png"))
+
+
+(defn combine-hashes
+  "Combine a list of hashes into a single hash."
+  [hashes]
+  (clj-commons.digest/digest "sha-256" (apply str hashes)))
+
+
+(defn hex->bytes
+  "Convert a hex string to a byte array."
+  [s]
+  (byte-array
+    (map #(Integer/parseInt (apply str %) 16)
+         (partition 2 (seq s)))))
+(defn combine-hashes
+  "Combine a list of hex-encoded hashes into a single hash."
+  [hashes]
+  (clj-commons.digest/digest "sha-256" (byte-array (mapcat hex->bytes hashes))))
+(combine-hashes [(compute-file-hash (fs/path "resources/frog.png"))
+                 (compute-file-hash (fs/path "resources/frog.png"))])
+
+
+
 
 (defn file-info [file-path]
   (let [base-map {:name       (fs/file-name file-path)
@@ -23,7 +48,31 @@
                        {:children (map file-info (fs/list-dir file-path))})]
     (merge base-map children-map)))
 
+
+(defn file-info [file-path]
+  (let [children (when (fs/directory? file-path)
+                   (map file-info (fs/list-dir file-path)))
+        file-size (if (fs/directory? file-path)
+                    (apply + (map :size children))
+                    (fs/size file-path))
+        file-hash (if (fs/directory? file-path)
+                    (combine-hashes (map :hash children))
+                    (compute-file-hash file-path))
+        base-map {:name       (fs/file-name file-path)
+                  :value      file-path
+                  :size       file-size
+                  :attributes (fs/read-attributes file-path "posix:*")
+                  :hash       file-hash}]
+    (if children
+      (assoc base-map :children children)
+      base-map)))
+
+
+
 (file-info default-directory)
+
+;; Sum the sizes, and hash the children hashes to get the hash of the directory
+;(def file-info (file-info default-directory))
 
 (defn- ->tree-item [x]
   (if (contains? x :children)
@@ -44,17 +93,12 @@
               :children (if (and is-dir? (seq children))
                           (map ->tree-item children)
                           ())})))
-
-;(->tree-item root-dir)
-
 (defn- file->map [file]
   (when (instance? java.io.File file)
     (let [path (.getPath file)]
       (if (.isDirectory file)
         {path (map file->map (.listFiles file))}
         path))))
-
-;(map file->map (->tree-item root-dir))
 
 (defn- map->tree-item [[value children]]
   (if (map? children)
@@ -63,8 +107,6 @@
 
 (defn- root-dir->tree-item [root-dir]
   (-> root-dir file->map map->tree-item))
-
-;(->tree-item root-dir)
 
 (def tree-table-view
   {:fx/type     :tree-table-view
@@ -111,16 +153,16 @@
       (println "Failed to set dock icon"))))
 
 (fx/on-fx-thread
- (fx/create-component
-   {:fx/type :stage
-    :showing true
-    :title   "Cell factory examples"
-    :icons   [image]
-    :scene   {:fx/type :scene
-              :root    {:fx/type     :tab-pane
-                        :pref-width  960
-                        :pref-height 540
-                        :tabs        [{:fx/type  :tab
-                                       :text     "Tree Table View"
-                                       :closable false
-                                       :content  tree-table-view}]}}}))
+  (fx/create-component
+    {:fx/type :stage
+     :showing true
+     :title   "Cell factory examples"
+     :icons   [image]
+     :scene   {:fx/type :scene
+               :root    {:fx/type     :tab-pane
+                         :pref-width  960
+                         :pref-height 540
+                         :tabs        [{:fx/type  :tab
+                                        :text     "Tree Table View"
+                                        :closable false
+                                        :content  tree-table-view}]}}}))
