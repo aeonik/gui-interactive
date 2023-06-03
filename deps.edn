@@ -10,7 +10,9 @@
          aeonik/file_hasher {:git/url "https://github.com/aeonik/file_hasher.git"
                              :sha     "3e592d3e688b38270ba3bd0a9e344ae2c8e5e87c"}
          commons-io/commons-io {:mvn/version "2.11.0"}
-
+         org.clojure/core.async {:mvn/version "1.6.673"}
+         manifold/manifold {:mvn/version "0.4.1"}
+         teknql/tapestry {:mvn/version "0.3.0-SNAPSHOT"}
          }
 
  :aliases {:dev {:classpath-overrides {org.clojure/clojure nil} ;; for disabling the official compiler

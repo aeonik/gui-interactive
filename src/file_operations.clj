@@ -5,8 +5,10 @@
             [clojure.tools.reader :as reader]
             [clojure.tools.analyzer.jvm :as jvm]
             [clojure.pprint :as pp]
-            [clojure.walk :refer [postwalk]])
-  (:import (java.io File)))
+            [clojure.walk :refer [postwalk]
+            [clojure.core.async :as async]]
+            )
+  (:import (java.io File java.nio.file Paths StandardWatchEventKinds WatchService)))
 
 (defn recursive-file-seq
   "Returns a lazy sequence of java.io.File objects representing all files and directories
@@ -74,3 +76,25 @@
        (mapv (fn [f] (.getAbsolutePath f)))))
 
 (absolute-paths-in-dir (clojure.java.io/file (System/getProperty "user.home")))
+
+(import )
+(require '[clojure.core.async :as async])
+
+;; Discussion here: https://chat.openai.com/share/bbafdcbe-b676-4a0c-b61e-75e269d0fb28
+(defn watch-dir [dir]
+  (let [watcher (.newWatchService (Paths/get dir (into-array String [])))
+        _ (.register watcher StandardWatchEventKinds/ENTRY_MODIFY)
+        events-chan (async/chan)]
+    (async/go-loop []
+      (let [key (async/<! (async/thread (.take watcher)))]
+        (doseq [event (.pollEvents key)]
+          (async/>! events-chan {:file (.context event) :event event}))
+        (.reset key)
+        (recur)))
+    events-chan))
+;; To use the previous function run this, it's probably broken because ChatGPT came up with it
+(comment (let [events-chan (watch-dir "/path/to/dir")]
+           (async/go-loop []
+             (when-let [{:keys [file event]} (async/<! events-chan)]
+               (println "File modified:" file)
+               (recur)))))
