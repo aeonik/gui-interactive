@@ -5,10 +5,12 @@
             [clojure.tools.reader :as reader]
             [clojure.tools.analyzer.jvm :as jvm]
             [clojure.pprint :as pp]
-            [clojure.walk :refer [postwalk]
-            [clojure.core.async :as async]]
-            )
-  (:import (java.io File java.nio.file Paths StandardWatchEventKinds WatchService)))
+            [clojure.walk :refer [postwalk]]
+            [clojure.core.async :as async])
+  (:import [java.io File]
+           [java.nio.file Paths
+                          StandardWatchEventKinds
+                          WatchService]))
 
 (defn recursive-file-seq
   "Returns a lazy sequence of java.io.File objects representing all files and directories
@@ -76,9 +78,6 @@
        (mapv (fn [f] (.getAbsolutePath f)))))
 
 (absolute-paths-in-dir (clojure.java.io/file (System/getProperty "user.home")))
-
-(import )
-(require '[clojure.core.async :as async])
 
 ;; Discussion here: https://chat.openai.com/share/bbafdcbe-b676-4a0c-b61e-75e269d0fb28
 (defn watch-dir [dir]
