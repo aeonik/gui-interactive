@@ -5,7 +5,6 @@
             [clojure.java.io :as io])
   (:import (java.awt Taskbar)
            (javafx.scene.image Image)
-           (javafx.scene.input KeyCode KeyEvent)
            (javax.imageio ImageIO)))
 
 (def default-directory (fs/path "resources"))
@@ -55,7 +54,6 @@
         children-map (when (fs/directory? file-path)
                        {:children (map file-info (fs/list-dir file-path))})]
     (merge base-map children-map)))
-
 
 (defn file-info [file-path]
   (let [children (when (fs/directory? file-path)

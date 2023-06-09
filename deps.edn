@@ -1,23 +1,26 @@
 {:paths ["src" "resources" "target/classes"]
- :deps  {
-         org.clojure/clojure {:mvn/version "1.11.1"}
+ :deps  {org.clojure/clojure {:mvn/version "1.11.1"}
          org.clojure/tools.trace {:mvn/version "0.7.11"}
+         org.clojure/tools.namespace {:mvn/version "1.3.0"}
+         org.clojure/tools.deps.graph {:mvn/version "1.1.68"}
          org.clj-commons/digest {:mvn/version "1.4.100"}
          cljfx/cljfx         {:mvn/version "1.7.22"}
          babashka/fs {:mvn/version "0.4.18"}
          io.github.cljfx/dev {:mvn/version "1.0.36"}
-         com.github.jpmonettas/flow-storm-dbg {:mvn/version "RELEASE"}
+         ;com.github.jpmonettas/flow-storm-dbg {:mvn/version "RELEASE"}
          aeonik/file_hasher {:git/url "https://github.com/aeonik/file_hasher.git"
                              :sha     "3e592d3e688b38270ba3bd0a9e344ae2c8e5e87c"}
          commons-io/commons-io {:mvn/version "2.11.0"}
          org.clojure/core.async {:mvn/version "1.6.673"}
          manifold/manifold {:mvn/version "0.4.1"}
          teknql/tapestry {:mvn/version "0.3.0-SNAPSHOT"}
-         }
+         overtone/overtone {:mvn/version "0.10.6"}
+         aleph/aleph {:mvn/version "0.6.2"}}
 
  :aliases {:dev {:classpath-overrides {org.clojure/clojure nil} ;; for disabling the official compiler
                  :extra-deps {com.github.jpmonettas/clojure {:mvn/version "RELEASE"}
                               com.github.jpmonettas/flow-storm-dbg {:mvn/version "RELEASE"}}
                  :jvm-opts ["-Dflowstorm.startRecording=true"
                             "-Dclojure.storm.instrumentEnable=true"
-                            "-Dclojure.storm.instrumentOnlyPrefixes=user,gui-interactive.,examples.,file-tree-view"]}}}
+                            "-Dclojure.storm.instrumentOnlyPrefixes=gui-interactive.,graph-view"
+                            "-Dflowstorm.theme=dark"]}}}
