@@ -5,9 +5,21 @@
             [clojure.java.io :as io])
   (:import (java.awt Taskbar)
            (javafx.scene.image Image)
+           (javafx.scene.input KeyCode KeyEvent)
            (javax.imageio ImageIO)))
 
 (def default-directory (fs/path "resources"))
+
+(defmulti handle :event/type)
+(defmethod handle ::key-press [{:keys [fx/event]}]
+  (let [code (.getCode event)
+        control-down? (.isControlDown event)]
+    (when (and control-down? (= code KeyCode/LEFT))
+      {:fx/type :alert
+       :alert-type :information
+       :title "Info"
+       :header-text nil
+       :content-text "Ctrl+Left key combination pressed!"})))
 
 (defn compute-file-hash [file-path]
   (clj-commons.digest/digest "sha-256" (fs/file file-path)))
@@ -104,6 +116,8 @@
 
 (def tree-table-view
   {:fx/type     :tree-table-view
+   :selection-mode :multiple
+   :on-key-pressed {:event/type ::key-press}
    :row-factory {:fx/cell-type :tree-table-row
                  :describe     (fn [x]
                                  {:style {:-fx-background-color (cond
@@ -148,6 +162,7 @@
     (catch Exception e
       (println "Failed to set dock icon"))))
 
+;; TODO Add Renderer function that mounts handler
 (fx/on-fx-thread
   (fx/create-component
     {:fx/type :stage
@@ -162,3 +177,6 @@
                                         :text     "Tree Table View"
                                         :closable false
                                         :content  tree-table-view}]}}}))
+
+(require 'cljfx.dev)
+(cljfx.dev/help-ui)
