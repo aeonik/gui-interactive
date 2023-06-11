@@ -1,17 +1,72 @@
 (ns graph_view
   (:require
-    [babashka.fs :as fs]
-    [cljfx.api :as fx]
-    [clojure.java.io :as io]
-    [clojure.tools.reader :as reader]
-    [clojure.tools.reader.edn :as edn]
-    [clojure.tools.analyzer.jvm :as analyzer]
-    [clojure.tools.deps.alpha :as deps]
-    [clojure.tools.deps.graph :as graph]
-    [clojure.tools.namespace.parse :as ns-parse]
-    [clojure.tools.namespace.find :as ns-find]
-    [babashka.fs :as fs]
-    ))
+   [babashka.fs :as fs]
+   [cljfx.api :as fx]
+   [clojure.java.io :as io]
+   [clojure.tools.reader :as reader]
+   [clojure.tools.reader.edn :as edn]
+   [clojure.tools.analyzer.jvm :as analyzer]
+   [clojure.tools.deps.alpha :as deps]
+   [clojure.tools.deps.graph :as graph]
+   [clojure.tools.namespace.parse :as ns-parse]
+   [clojure.tools.namespace.find :as ns-find]
+   [babashka.fs :as fs]
+   [flow-storm.api :as fs-api]
+   [clojure.tools.deps.alpha :as deps]
+   [clojure.tools.deps.alpha.extensions :as ext]
+   [clojure.tools.deps.alpha.util.session :as session]
+   [clojure.tools.deps.alpha.script.parse :as parse]
+   [clojure.tools.cli :as cli]
+   [clojure.string :as str]
+   )
+  (:import
+    [java.io IOException]
+    [clojure.lang IExceptionInfo]))
+
+
+(defn project-map
+  [{:keys [deps trace trace-file output aliases trace-omit size] :as opts}]
+  (try
+    (if trace-file
+      (do
+        (when-not output (throw (ex-info "Must specify output file name in trace mode" {})))
+        (let [tf (io/file trace-file)]
+          (if (.exists tf)
+            ;; The output-trace function has been removed
+            (throw (ex-info (str "Trace file does not exist: " trace-file) {})))))
+      (let [{:keys [root-edn user-edn project-edn]} (deps/find-edn-maps (or deps "deps.edn"))
+            master-edn (deps/merge-edns [root-edn user-edn project-edn])
+            combined-aliases (deps/combine-aliases master-edn aliases)
+            basis (session/with-session
+                    (deps/calc-basis master-edn {:resolve-args (merge combined-aliases {:trace true})
+                                                 :classpath-args combined-aliases}))
+            lib-map (:libs basis)]
+        ;; Return the relevant variables as a map
+        {:root-edn root-edn
+         :user-edn user-edn
+         :project-edn project-edn
+         :master-edn master-edn
+         :combined-aliases combined-aliases
+         :basis basis
+         :lib-map lib-map
+         :output output
+         :size size}))
+    (catch IOException e
+      (if (str/starts-with? (.getMessage e) "Cannot run program")
+        (throw (ex-info "tools.deps.graph requires Graphviz (https://graphviz.gitlab.io/download) to be installed to generate graphs." { } e))))))
+
+(project-map {:deps "deps.edn"})
+
+
+(def root-edn-user-edn-project-edn (deps/find-edn-maps (or deps "deps.edn")))
+(def master-edn (deps/merge-edns [(:root-edn root-edn-user-edn-project-edn)
+                                  (:user-edn root-edn-user-edn-project-edn)
+                                  (:project-edn root-edn-user-edn-project-edn)]))
+(def combined-aliases (deps/combine-aliases master-edn aliases))  ;; aliases should be defined somewhere
+(def basis (session/with-session
+             (deps/calc-basis master-edn {:resolve-args (merge combined-aliases {:trace true})
+                                          :classpath-args combined-aliases})))
+(def lib-map (:libs basis))
 
 (defn- ->tree-item [x]
   (cond
