@@ -60,6 +60,7 @@
 ;; I have been told that flattening tree structure can make it easier.
 ;; This function allows calling map over a tree
 ;; Problem is it loses all structural information in the tree
+;; Probably want to delete everything after this comment, because I have no idea what I'm doing.
 (defn flatten-tree [tree]
   (tree-seq
     (comp seq :children) ;; Branch if :children is a non-empty sequence.
@@ -119,6 +120,7 @@
   (mapcat next nodes))
 
 (defn depth-traversal [nodes]
+  "Traverse a tree depth-first."
   (if (not (empty? nodes))
     (cons (node-values nodes) (depth-traversal (node-children nodes)))))
 
@@ -127,6 +129,7 @@
 ;; From Brandon Bloom Dendrology Talk
 ;; https://www.youtube.com/watch?v=YgvJqWiyMRY
 (defn annotate-depth [node]
+  "Annotate each node with its depth."
   (letfn [(f [node depth]
             (let [d (inc depth)
                   annotate-child #(f % d)]
@@ -138,6 +141,7 @@
 
 ;; ChatGPT says this version is better:
 (defn annotate-depth [node]
+  "Annotate each node with its depth."
   (letfn [(f [node depth]
             (let [d (inc depth)]
               (assoc node
@@ -146,6 +150,7 @@
     (f node 0)))
 
 (defn annotate-max-depth [node]
+  "Annotate each node with its maximum depth."
   (let [{:keys [children]} node]
     (if (seq children)
       (let [children*
@@ -228,6 +233,16 @@
       (z/root loc)
       (let [loc* (z/edit loc assoc :index index)]
         (recur (inc index) (z/next loc*))))))
+
+;; Cool tree-seq function from Clojurian's Slack by Liasm Ayriz
+(defn map-vec-tree-seq [form]
+  (tree-seq #(or (sequential? %)
+                 (associative? %))
+            (fn [form]
+              (cond (sequential? form) (next form)
+                    (associative? form) (#(interleave (keys %) (vals %)) form)))
+            form))
+
 
 ;; Further Resources
 ;; Breadth First numbering by Chris Okasaki

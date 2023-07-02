@@ -18,10 +18,57 @@
    [clojure.tools.deps.alpha.script.parse :as parse]
    [clojure.tools.cli :as cli]
    [clojure.string :as str]
+   [clojure.pprint :as pprint]
+   [clojure.data :as data]
    )
   (:import
     [java.io IOException]
     [clojure.lang IExceptionInfo]))
+
+
+;; https://gist.github.com/cgrand/b5bf4851b0e5e3aeb438eba2298dacb9
+;; Might also want to use https://github.com/cgrand/xforms
+(defn tree-cat [branch? children]
+  (fn [rf]
+    (letfn [(nested [acc x]
+              (let [acc (rf acc x)]
+                (cond
+                  (reduced? acc) (reduced acc)
+                  (branch? x) (let [acc (reduce nested acc (children x))]
+                                (cond-> acc (reduced? acc) reduced))
+                  :else acc)))]
+      (fn
+        ([] (rf))
+        ([acc] (rf acc))
+        ([acc x] (unreduced (nested acc x)))))))
+
+(defn foliage-cat [branch? children]
+  (fn [rf]
+    (letfn [(nested [acc x]
+              (let [acc (if (branch? x)
+                          (reduce nested acc (children x))
+                          (rf acc x))]
+                (cond-> acc (reduced? acc) reduced)))]
+      (fn
+        ([] (rf))
+        ([acc] (rf acc))
+        ([acc x] (unreduced (nested acc x)))))))
+
+(defn nodes-cat [branch? children]
+  (fn [rf]
+    (let [rf (x/ensure-kvrf rf)
+          nested (fn nested [acc x]
+                   (let [is-branch (branch? x)
+                         acc (rf acc is-branch x)]
+                     (cond
+                       (reduced? acc) (reduced acc)
+                       is-branch (let [acc (reduce nested acc (children x))]
+                                   (cond-> acc (reduced? acc) reduced))
+                       :else acc)))]
+      (fn
+        ([] (rf))
+        ([acc] (rf acc))
+        ([acc x] (unreduced (nested acc x)))))))
 
 
 (defn project-map
@@ -55,8 +102,121 @@
       (if (str/starts-with? (.getMessage e) "Cannot run program")
         (throw (ex-info "tools.deps.graph requires Graphviz (https://graphviz.gitlab.io/download) to be installed to generate graphs." { } e))))))
 
-(project-map {:deps "deps.edn"})
+(defn tree-diff [t1 t2]
+  (cond
+    (and (coll? t1) (coll? t2)) 
+      (let [keys1 (set (keys t1))
+            keys2 (set (keys t2))
+            common (clojure.set/intersection keys1 keys2)
+            only-in-1 (clojure.set/difference keys1 keys2)
+            only-in-2 (clojure.set/difference keys2 keys1)]
+        (concat 
+          (for [k only-in-1] [:removed k (get t1 k)])
+          (for [k only-in-2] [:added k (get t2 k)])
+          (for [k common] 
+            (let [diff (tree-diff (get t1 k) (get t2 k))]
+              (when (seq diff) [:changed k diff])))))
+    
+    (= t1 t2) nil
+    
+    :else [[:changed t1 t2]]))
 
+
+
+(def project-data (project-map {:deps "deps.edn"}))
+(keys project-data)
+(:root-edn project-data)
+(:user-edn project-data)
+(:project-edn project-data)
+(:master-edn project-data)
+(:combined-aliases project-data)
+(:basis project-data)
+(:lib-map project-data)
+(:output project-data)
+(:size project-data)
+
+(def root-edn (:root-edn project-data))
+(take 1 (mapcat root-edn))
+
+(transduce (comp (tree-cat map? vals)
+                 (filter map?))
+           (:root-edn project-data))
+      
+
+(map (comp count (juxt (keys project-data)) project-data))
+(count (tree-seq map? vals (:root-edn project-data)))
+(count (:user-edn project-data))
+(count (:project-edn project-data))
+(count (:master-edn project-data))
+
+(count (filter map? (tree-seq map? vals (:root-edn project-data))))
+(count (filter map? (tree-seq map? vals (:user-edn project-data))))
+(count (filter map? (tree-seq map? vals (:project-edn project-data))))
+(count (filter map? (tree-seq map? vals (:master-edn project-data))))
+(count (filter map? (tree-seq map? vals (:combined-aliases project-data))))
+(count (filter map? (tree-seq map? vals (:basis project-data))))
+(count (filter map? (tree-seq map? vals (:lib-map project-data))))
+
+(pprint/pprint (tree-seq map? vals (:root-edn project-data)))
+
+(transduce
+ (filter vector?)
+ (fn
+   ([acc] acc)
+   ([[l-acc r-acc] [l r]]
+    [(+ l-acc l) (+ r-acc r)]))
+ [0 0]
+ (tree-seq (complement vector?) identity (root-edn project-data)))
+
+(defn count-map-elements [m]
+  (transduce
+   (comp (filter map?) (map count))
+   +
+   (tree-seq map? vals m)))
+
+(defn return-map-elements [m]
+  (transduce
+   (comp (filter map?) (map count))
+   +
+   (tree-seq map? vals m)))
+
+(count-map-elements (:root-edn project-data))
+(return-map-elements (:root-edn project-data))
+
+
+(defn global-totals
+  "the first transducer pulls out the `:changes` entry for each map and
+  concatenates them all together. The second one, `cat`, concatenates all the
+  subsequences together. This will feed only the vectors into the reducing
+  function."
+  [data]
+  (let [xform (comp (mapcat :changes) cat)
+        f     (completing
+               (fn [acc item]
+                 (mapv + acc item)))]
+    (transduce xform f [0 0] data)))
+
+sicmutils.env> (time (global-totals (take 100000 (cycle inputs))))
+"Elapsed time: 2386.474 msecs"
+[6440000 14540000]
+
+(map (fn [key] 
+       {key (count 
+             (filter map? 
+                     (tree-seq map? vals (get project-data key))))}) 
+     (keys project-data))
+
+(pprint/pprint (into {} 
+                     (map (fn [key] 
+                            {key (count 
+                                  (filter map? 
+                                          (tree-seq map? vals (get project-data key))))}) 
+                          (keys project-data))))
+
+;; Does not work
+(tree-diff (:root-edn project-data) (:user-edn project-data)) 
+
+(frequencies root-edn)
 
 (def root-edn-user-edn-project-edn (deps/find-edn-maps (or deps "deps.edn")))
 (def master-edn (deps/merge-edns [(:root-edn root-edn-user-edn-project-edn)

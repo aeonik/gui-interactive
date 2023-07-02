@@ -5,6 +5,7 @@
             [clojure.java.io :as io])
   (:import (java.awt Taskbar)
            (javafx.scene.image Image)
+           (javafx.scene.input KeyCode)
            (javax.imageio ImageIO)))
 
 (def default-directory (fs/path "resources"))
@@ -34,8 +35,8 @@
   "Convert a hex string to a byte array."
   [s]
   (byte-array
-    (map #(Integer/parseInt (apply str %) 16)
-         (partition 2 (seq s)))))
+   (map #(Integer/parseInt (apply str %) 16)
+        (partition 2 (seq s)))))
 
 (defn combine-hashes
   "Combine a list of hex-encoded hashes into a single hash."
@@ -128,21 +129,18 @@
                                                                   :else "#adf")}})}
    :columns     [{:fx/type            :tree-table-column
                   :text               "File Name"
-                  :max-width          960/2
                   :cell-value-factory identity
                   :cell-factory       {:fx/cell-type :tree-table-cell
                                        :describe     (fn [x]
                                                        {:text (:name x)})}}
                  {:fx/type            :tree-table-column
                   :text               "Size"
-                  :max-width          960/2
                   :cell-value-factory identity
                   :cell-factory       {:fx/cell-type :tree-table-cell
                                        :describe     (fn [x]
                                                        {:text (str (:size x))})}}
                  {:fx/type            :tree-table-column
                   :text               "Hash"
-                  :max-width          960/2
                   :cell-value-factory identity
                   :cell-factory       {:fx/cell-type :tree-table-cell
                                        :describe     (fn [x]
@@ -162,19 +160,19 @@
 
 ;; TODO Add Renderer function that mounts handler
 (fx/on-fx-thread
-  (fx/create-component
-    {:fx/type :stage
-     :showing true
-     :title   "Cell factory examples"
-     :icons   [image]
-     :scene   {:fx/type :scene
-               :root    {:fx/type     :tab-pane
-                         :pref-width  960
-                         :pref-height 540
-                         :tabs        [{:fx/type  :tab
-                                        :text     "Tree Table View"
-                                        :closable false
-                                        :content  tree-table-view}]}}}))
+ (fx/create-component
+  {:fx/type :stage
+   :showing true
+   :title   "Cell factory examples"
+   :icons   [image]
+   :scene   {:fx/type :scene
+             :root    {:fx/type     :tab-pane
+                       :pref-width  960
+                       :pref-height 540
+                       :tabs        [{:fx/type  :tab
+                                      :text     "Tree Table View"
+                                      :closable false
+                                      :content  tree-table-view}]}}}))
 
 (require 'cljfx.dev)
 (cljfx.dev/help-ui)
