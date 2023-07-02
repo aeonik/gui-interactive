@@ -76,16 +76,19 @@
   (try
     (if trace-file
       (do
-        (when-not output (throw (ex-info "Must specify output file name in trace mode" {})))
+        (when-not output (throw
+                          (ex-info "Must specify output file name in trace mode" {})))
         (let [tf (io/file trace-file)]
           (if (.exists tf)
             ;; The output-trace function has been removed
             (throw (ex-info (str "Trace file does not exist: " trace-file) {})))))
-      (let [{:keys [root-edn user-edn project-edn]} (deps/find-edn-maps (or deps "deps.edn"))
+      (let [{:keys [root-edn user-edn project-edn]} (deps/find-edn-maps
+                                                     (or deps "deps.edn"))
             master-edn (deps/merge-edns [root-edn user-edn project-edn])
             combined-aliases (deps/combine-aliases master-edn aliases)
             basis (session/with-session
-                    (deps/calc-basis master-edn {:resolve-args (merge combined-aliases {:trace true})
+                    (deps/calc-basis master-edn {:resolve-args (merge combined-aliases
+                                                                      {:trace true})
                                                  :classpath-args combined-aliases}))
             lib-map (:libs basis)]
         ;; Return the relevant variables as a map
@@ -100,7 +103,7 @@
          :size size}))
     (catch IOException e
       (if (str/starts-with? (.getMessage e) "Cannot run program")
-        (throw (ex-info "tools.deps.graph requires Graphviz (https://graphviz.gitlab.io/download) to be installed to generate graphs." { } e))))))
+        (throw (ex-info "You shouldn't be here" { } e))))))
 
 (defn tree-diff [t1 t2]
   (cond
@@ -222,9 +225,11 @@ sicmutils.env> (time (global-totals (take 100000 (cycle inputs))))
 (def master-edn (deps/merge-edns [(:root-edn root-edn-user-edn-project-edn)
                                   (:user-edn root-edn-user-edn-project-edn)
                                   (:project-edn root-edn-user-edn-project-edn)]))
-(def combined-aliases (deps/combine-aliases master-edn aliases))  ;; aliases should be defined somewhere
+(def combined-aliases (deps/combine-aliases master-edn aliases))
+;; aliases should be defined somewhere
 (def basis (session/with-session
-             (deps/calc-basis master-edn {:resolve-args (merge combined-aliases {:trace true})
+             (deps/calc-basis master-edn {:resolve-args (merge combined-aliases
+                                                               {:trace true})
                                           :classpath-args combined-aliases})))
 (def lib-map (:libs basis))
 
