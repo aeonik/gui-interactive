@@ -8,7 +8,7 @@
 (def default-directory (fs/file "resources"))
 (def *state
   (atom {::expanded #{}
-         ::tree {default-directory (map fs/file (fs/list-dir default-directory))}}))
+         ::tree {default-directory (mapv fs/file (fs/list-dir default-directory))}}))
 
 (defmulti handle :event/type)
 
@@ -21,7 +21,7 @@
                       (not (get-in % [::tree id]))
                       (.isDirectory id))  ;; only load children for directories
                  (assoc-in [::tree id]
-                           (map fs/file (fs/list-dir id)))))))
+                           (mapv fs/file (fs/list-dir id)))))))
 
 (defn root-view [{::keys [expanded tree]}]
   (let [->desc (fn ->desc [id]
@@ -32,7 +32,7 @@
                     :on-expanded-changed {:event/type ::on-expanded-changed :id id}
                     :children (if (or (contains? expanded id)
                                       (tree id))
-                                (map ->desc (tree id))
+                                (mapv ->desc (tree id))
                                 ;; this is a dummy tree item that exists to make
                                 ;; its parent show as expandable:
                                 [{:fx/type :tree-item}])}

@@ -58,7 +58,7 @@
 
 (defn file-info [file-path]
   (let [children (when (fs/directory? file-path)
-                   (map file-info (fs/list-dir file-path)))
+                   (mapv file-info (fs/list-dir file-path)))
         file-size (if (fs/directory? file-path)
                     (apply + (map :size children))
                     (fs/size file-path))
@@ -81,7 +81,7 @@
 
 (defn- ->tree-item [x]
   (if (contains? x :children)
-    {:fx/type :tree-item :value x :children (map ->tree-item (:children x))}
+    {:fx/type :tree-item :value x :children (mapv ->tree-item (:children x))}
     {:fx/type :tree-item :value x}))
 
 (def root-dir (file-seq (io/file "resources")))
@@ -114,38 +114,38 @@
   (-> root-dir file->map map->tree-item))
 
 (def tree-table-view
-  {:fx/type     :tree-table-view
+  {:fx/type        :tree-table-view
    :selection-mode :multiple
    :on-key-pressed {:event/type ::key-press}
-   :row-factory {:fx/cell-type :tree-table-row
-                 :describe     (fn [x]
-                                 {:style {:-fx-background-color (cond
-                                                                  (number? x) "#99f"
-                                                                  (string? x) :gray
-                                                                  (map? x) "fda"
-                                                                  (set? x) :pink
-                                                                  (coll? x) "#faa"
-                                                                  (keyword? x) "eaf"
-                                                                  :else "#adf")}})}
-   :columns     [{:fx/type            :tree-table-column
-                  :text               "File Name"
-                  :cell-value-factory identity
-                  :cell-factory       {:fx/cell-type :tree-table-cell
-                                       :describe     (fn [x]
-                                                       {:text (:name x)})}}
-                 {:fx/type            :tree-table-column
-                  :text               "Size"
-                  :cell-value-factory identity
-                  :cell-factory       {:fx/cell-type :tree-table-cell
-                                       :describe     (fn [x]
-                                                       {:text (str (:size x))})}}
-                 {:fx/type            :tree-table-column
-                  :text               "Hash"
-                  :cell-value-factory identity
-                  :cell-factory       {:fx/cell-type :tree-table-cell
-                                       :describe     (fn [x]
-                                                       {:text (str (:hash x))})}}]
-   :root        (->tree-item (file-info default-directory))})
+   :row-factory    {:fx/cell-type :tree-table-row
+                    :describe     (fn [x]
+                                    {:style {:-fx-background-color (cond
+                                                                     (number? x) "#99f"
+                                                                     (string? x) :gray
+                                                                     (map? x) "fda"
+                                                                     (set? x) :pink
+                                                                     (coll? x) "#faa"
+                                                                     (keyword? x) "eaf"
+                                                                     :else "#adf")}})}
+   :columns        [{:fx/type            :tree-table-column
+                     :text               "File Name"
+                     :cell-value-factory identity
+                     :cell-factory       {:fx/cell-type :tree-table-cell
+                                          :describe     (fn [x]
+                                                          {:text (:name x)})}}
+                    {:fx/type            :tree-table-column
+                     :text               "Size"
+                     :cell-value-factory identity
+                     :cell-factory       {:fx/cell-type :tree-table-cell
+                                          :describe     (fn [x]
+                                                          {:text (str (:size x))})}}
+                    {:fx/type            :tree-table-column
+                     :text               "Hash"
+                     :cell-value-factory identity
+                     :cell-factory       {:fx/cell-type :tree-table-cell
+                                          :describe     (fn [x]
+                                                          {:text (str (:hash x))})}}]
+   :root           (->tree-item (file-info default-directory))})
 
 (def image-url (-> "frog2.png" io/resource .toString))
 
@@ -173,6 +173,3 @@
                                       :text     "Tree Table View"
                                       :closable false
                                       :content  tree-table-view}]}}}))
-
-(require 'cljfx.dev)
-(cljfx.dev/help-ui)
