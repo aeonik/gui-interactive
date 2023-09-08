@@ -2,7 +2,8 @@
   (:require [babashka.fs :as fs]
             [cljfx.api :as fx]
             [clj-commons.digest]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [util.file :as file])
   (:import (java.awt Taskbar)
            (javafx.scene.image Image)
            (javafx.scene.input KeyCode)
@@ -21,37 +22,13 @@
        :header-text nil
        :content-text "Ctrl+Left key combination pressed!"})))
 
-(defn compute-file-hash [file-path]
-  (clj-commons.digest/digest "sha-256" (fs/file file-path)))
-
-(compute-file-hash (fs/path "resources/frog.png"))
-
-(defn combine-hashes
-  "Combine a list of hashes into a single hash."
-  [hashes]
-  (clj-commons.digest/digest "sha-256" (apply str hashes)))
-
-(defn hex->bytes
-  "Convert a hex string to a byte array."
-  [s]
-  (byte-array
-   (map #(Integer/parseInt (apply str %) 16)
-        (partition 2 (seq s)))))
-
-(defn combine-hashes
-  "Combine a list of hex-encoded hashes into a single hash."
-  [hashes]
-  (clj-commons.digest/digest "sha-256" (byte-array (mapcat hex->bytes hashes))))
-(combine-hashes [(compute-file-hash (fs/path "resources/frog.png"))
-                 (compute-file-hash (fs/path "resources/frog.png"))])
-
 (defn file-info [file-path]
   (let [base-map {:name       (fs/file-name file-path)
                   :value     file-path
                   :size       (fs/size file-path)
                   :attributes (fs/read-attributes file-path "posix:*")
                   :hash       (when (not (fs/directory? file-path))
-                                (compute-file-hash file-path))}
+                                (file/compute-file-hash file-path))}
         children-map (when (fs/directory? file-path)
                        {:children (map file-info (fs/list-dir file-path))})]
     (merge base-map children-map)))
@@ -60,11 +37,11 @@
   (let [children (when (fs/directory? file-path)
                    (mapv file-info (fs/list-dir file-path)))
         file-size (if (fs/directory? file-path)
-                    (apply + (map :size children))
+                    (apply + (mapv :size children))
                     (fs/size file-path))
         file-hash (if (fs/directory? file-path)
-                    (combine-hashes (map :hash children))
-                    (compute-file-hash file-path))
+                    (file/combine-hashes (mapv :hash children))
+                    (file/compute-file-hash file-path))
         base-map {:name       (fs/file-name file-path)
                   :value      file-path
                   :size       file-size

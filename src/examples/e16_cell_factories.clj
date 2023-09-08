@@ -54,10 +54,10 @@
                                {:style {:-fx-background-color (cond
                                                                 (number? x) "#99f"
                                                                 (string? x) "#cfa"
-                                                                (map? x) "fda"
+                                                                (map? x) "#fda"
                                                                 (set? x) :pink
                                                                 (coll? x) "#faa"
-                                                                (keyword? x) "eaf"
+                                                                (keyword? x) "#eaf"
                                                                 :else "#adf")}})}
    :columns [{:fx/type :tree-table-column
               :text "pr-str"
