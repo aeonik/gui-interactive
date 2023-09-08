@@ -9,5 +9,3 @@
   [{:keys [text]}]
   {:fx/type :text-area
    :text text})
-
-clojure.core/*source-path*
