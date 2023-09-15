@@ -1,56 +1,69 @@
 (ns hex-editor.binary
   (:require [clojure.java.io :as io]
-            [buddy.core.codecs :as codecs])
-  (:import [org.apache.commons.codec.binary Hex]
+            [buddy.core.codecs :as codecs]
+            [rmap.core :as rmap :refer [rmap!]])
+  (:import (java.nio ByteBuffer)
+           [org.apache.commons.codec.binary Hex]
            [java.io ByteArrayOutputStream
                     RandomAccessFile]
            [java.util HexFormat]))
+
 (defn slurp-bytes
-  "Slurp the bytes from a slurpable thing"
+  "Slurp the bytes from a slurpable thing, this is an eager load"
   [x]
   (with-open [out (ByteArrayOutputStream.)]
     (clojure.java.io/copy (clojure.java.io/input-stream x) out)
     (.toByteArray out)))
 
-(defn lazy-file-seq
-  "Return a lazy sequence of bytes from a RandomAccessFile"
-  [file]
-  (with-open [raf (RandomAccessFile. file "r")]
-    (let [len (.length raf)]
-      (mapv #(byte (.read raf)) (range len)))))
-(defn take-bytes
-  "Takes n bytes from a lazy byte sequence"
-  [n bytes-seq]
-  (take n bytes-seq))
+(defrecord LazyFile [path raf length])
+
+(defn open-lazy-file [path]
+  "Open a file in read-only mode and return a LazyFile record"
+  (let [raf (RandomAccessFile. path "r")
+        length (.length raf)]
+    (->LazyFile path raf length)))
+
+(defn close-lazy-file [lazy-file]
+  (.close (:raf lazy-file)))
+
+(defn read-byte [lazy-file pos]
+  (let [raf (:raf lazy-file)]
+    (.seek raf pos)
+    (byte (.read raf))))
+
+(defn read-range [lazy-file start end]
+  (lazy-seq
+    (when (< start end)
+      (cons (read-byte lazy-file start) (read-range lazy-file (inc start) end)))))
 
 (def file (io/file "/home/dave/Projects/mods/bg3/Shared.pak"))
 
 (def binary-file (slurp-bytes file))
 
-(take 16 binary-file)
-(comment (def file-map
-           {:header           4
-            :version          4
-            :file-list-offset 8
-            :file-list-size   4
-            :flags            1
-            :priority         1
-            :MD5              16
-            :file-data        (fn [spec byte-seq acc]
-                                (let [length (:file-list-size spec)]
-                                  (take length (drop @acc byte-seq))))}))
+(def binary-file-lazy (open-lazy-file "/home/dave/Projects/mods/bg3/Shared.pak"))
 
-(defn lazy-file-seq
-  "Return a lazy sequence of bytes from a RandomAccessFile"
-  [file]
-  (let [raf (RandomAccessFile. file "r")
-        len (.length raf)]
-    (map (fn [offset]
-           (.seek raf offset)
-           (bit-and (.read raf) 0xFF))
-         (range 0 len))))
+(comment (read-byte binary-file-lazy 2))
+(comment
+  (time (read-range binary-file-lazy 150 153))
+  (time (read-range binary-file-lazy 15000 15003)))
+(comment (take 1 binary-file))
+(comment (rmap! {:foo 1
+                 :bar (rmap/ref :foo)}))
 
-(def file-bytes (lazy-file-seq file))
+(def file-map
+  (rmap!
+    {:header           4
+     :version          4
+     :file-list-offset 8
+     :file-list-size   4
+     :flags            1
+     :priority         1
+     :MD5              16
+     :file-data        (rmap/ref :file-list-size)}))
+
+(read-range binary-file-lazy (:file-list-size file-map) (:file-list-offset file-map))
+
+
 
 (defn process-spec
   [spec byte-seq]
@@ -74,6 +87,7 @@
           :else
           (recur (rest remaining-spec) remaining-bytes acc))))))
 
+
 (def file-spec
   {:header           4
    :version          4
@@ -81,15 +95,14 @@
    :file-list-size   4
    :nested           {:flags 1, :priority 1}})
 
-
 (def self-map {:header           4
                :version          4
                :file-list-offset 8
                :file-list-size   4
-               :nested           {:flags 1, :priority 1}
+               :nested-map           {:flags 1, :priority 1}
                :data             :file-list-size
-               :test   :nested
-               :test2 {:nested :nested}})                  ; Self-reference to :file-list-size
+               :test   :nested-map
+               :test2 {:nested-map :nested-map}})                ; Self-reference to :file-list-size
 
 (defn build-self-ref-map [spec]
   (let [acc (atom {})]
@@ -101,15 +114,14 @@
 
 (def my-self-ref-map (build-self-ref-map self-map))
 
-(process-spec file-spec file-bytes)
+(comment (process-spec file-spec file-bytes))
 
 (comment {:header           {:address 0 :size 4 :data (76 83 80 75)},
           :version          {:address 4 :size 4 :data (18 0 0 0)},
           :file-list-offset {:address 8 :size 8 :data (40 62 196 27 0 0 0 0)},
           :file-list-size   {:address 16 :size 4 :data (205 148 20 0)},
-          :nested           {:address 20 :size 2 :data {:flags    {:address 20 :size 1 (0)},
-                                                        :priority {:address 21 :size 1 (0)}}}}
-
+          :nested           {:address 20 :size 2 :data {:flags    {:address 20 :size 1 :data (0)},
+                                                        :priority {:address 21 :size 1 :data (0)}}}}
          (defn nested-fn [acc _]
            (let [file-list-size        (:size (get acc :file-list-size))
                  file-list-offset-data (:data (get acc :file-list-offset))
@@ -123,14 +135,11 @@
             :file-list-size   4
             :nested           nested-fn})
 
-
-
          (defn process-label [acc label size-fn byte-seq]
            (let [current-address (count (apply concat (map :data (vals acc))))
                  size            (if (fn? size-fn) (size-fn acc) size-fn)
                  segment         (take size byte-seq)]
              (assoc acc label {:address current-address :size size :data segment})))
-
 
          (defn run-spec [spec byte-seq acc]
            (reduce
@@ -145,7 +154,6 @@
              (seq spec)))
          (defn process-spec [spec byte-seq]
            (run-spec spec byte-seq {}))
-
 
          (def byte-seq [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 4 0 0 0 1 2])
 
