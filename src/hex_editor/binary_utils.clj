@@ -1,19 +1,49 @@
 (ns hex-editor.binary-utils
-  (:require [clojure.pprint :refer [pprint]])
+  (:require [clojure.pprint :refer [pprint]]
+            [ubergraph.core :as uber]
+            [tupelo.core :as t])
   (:import (com.sun.jdi ShortValue)
            (java.nio ByteBuffer ByteOrder)))
+
+
+
+(defn byte-seq [^InputStream is size]
+  (let [ib (byte-array size)]
+    ((fn step []
+       (lazy-seq
+         (let [n (.read is ib)]
+           (when (not= -1 n)
+             (let [cb (chunk-buffer size)]
+               (dotimes [i size] (chunk-append cb (aget ib i)))
+               (chunk-cons (chunk cb) (step))))))))))
+
+(defn byte->hex [b]
+  (format "%02X" b))
+
+(defn hex->byte [hex-str]
+  (-> hex-str
+      (Integer/parseInt 16)
+      (mod 256)
+      (byte)))
+
+
+(defn hex->uint [hex-str]
+  (Integer/parseInt hex-str 16))
+
+
+(defn hex->num [#^String s]
+  (Integer/parseUnsignedInt s 16))
+(defn hex->num [#^String s]
+  (Integer/parseInt s 16))
+
+(let [byte-value (byte 45)]
+  (byte->hex byte-value))
 
 (defn uint8 [x]
   (bit-and x 0xFF))
 
-(defn int8 [x]
-  (byte x))
-
 (defn uint [x]
   (Byte/toUnsignedInt x))
-
-(defn ulong [x]
-  (.toUnsignedLong x))
 
 (defn value-of [x & [radix]]
   (.valueOf x radix))
@@ -24,30 +54,17 @@
 (defn little-endian->int [bytes]
   (big-endian->int (reverse bytes)))
 
-(defn to-bool [x]
-  (not (zero? x)))
-
-(defn to-ascii [x]
-  (let [ch (char (uint8 x))]
-    (if (<= 0x20 ch 0x7E)  ; ASCII printable characters
-      ch
-      :invalid)))
-
-(defn to-utf-8 [bytes]
-  (String. bytes "UTF-8"))
-
-(defn to-date [timestamp]
-  (java.util.Date. (* 1000 timestamp)))
-
 (defn to-guid [bytes]
   ;; GUID conversion logic here
   )
 
-"This needs to be fixed to handle sequences of bytes."
+
 (def type-conversions
-  {:utf-16 ^{:bytes 1} #(str (char %))
+  {:utf-8 ^{:bytes 1} #(str (char %))
    :uint8  ^{:bytes 1} #(bit-and % 0xFF)
    :int8   ^{:bytes 1} #(byte %)
+   :hex    ^{:bytes 1} #(byte->hex %)
+   :utf-16 ^{:bytes 2} #(str (char %))
    :short  ^{:bytes 2} #(short %)
    :char   ^{:bytes 2} #(char (bit-and % 0xFF))
    :int    ^{:bytes 4} #(int %)
@@ -55,19 +72,61 @@
    :float  ^{:bytes 4} #(float %)
    :double ^{:bytes 8} #(double %)
    :long   ^{:bytes 8} #(long %)
-   :ulong  ^{:bytes 8} #(Byte/toUnsignedLong %)
-   :hex    ^{:bytes 1} #()
+   :ulong  ^{:bytes 8} #(Byte/toUnsignedLong %) })
 
 
-(map (:utf-16 type-conversions) [65 100])
+(char (long (byte-array [(byte 65) (byte 66)])))
+"Execution error (ClassCastException) at hex-editor.binary-utils/eval27026 (binary_utils.clj:1).
+class [B cannot be cast to class java.lang.Number ([B and java.lang.Number are in module java.base of loader 'bootstrap'"
+(byte->hex (byte 114))
+(byte->hex (byte 190))
+(hex->byte "20")
+(hex->uint "")
+
+(def test-bytes (byte-array [(byte 32) (byte -84) (byte 32) (byte -84) (byte 32) (byte -84) (byte 32) (byte -84)]))
+
+;; Example Output after parsing test-bytes
+=> :hex ["20" "AC" "20" "AC" "20" "AC" "20" "AC"]
+=> :utf-8 [" " :invalid " " :invalid " " :invalid " " :invalid]
+=> :utf-16 [€ € € €]
+=> :uint8-be [32 172 32 172 32 172 32 172]
+=> :sint8-be [32 -84 32 -84 32 -84 32 -84]
+=> :uint16-be [8364 8364 8364 8364]
+=> :sint16-be [8364 8364 8364 8364]
+=> :uint16-le [44064 44064 44064 44064]
+=> :sint16-le [-21472 -21472 -21472 -21472]
+=> :uint32-be [548151468 548151468]
+=> :sint32-be [548151468 548151468]
+=> :uint32-le [2887822368 2887822368]
+=> :sint32-le [-1407144928 -1407144928]
+=> :uint64-be [2354292628862541996]
+=> :sint64-be [2354292628862541996]
+=> :uint64-le [12403102630105099296]
+=> :sint64-le [-6043641443604452320]
+
+(hex->uint "20AC20AC20AC20AC")
+(hex->byte "20AC")
+
+(byte->hex (byte 32))
+(byte->hex (byte 114))
+(map (:utf-16 type-conversions) [(byte 20)])
+(map (:utf-16 type-conversions) [(byte 20) (byte 30)])
 (map (:int type-conversions) [(byte 65) (byte 0) (byte 0) (byte 0)])
 (map (:int type-conversions) (byte-array [(byte 65) (byte 0) (byte 0) (byte 0)]))
 
+(map (:hex type-conversions) (byte-array [(byte 65) (byte 0) (byte 0) (byte 0)]))
+
 ((:utf-16 type-conversions) (byte 65))
+
 ((:int type-conversions) (byte 65))
+
 ((:short type-conversions) (byte 65))
+
+
 ((:long type-conversions) (byte 65))
 ((:int type-conversions) (byte-array [65 0 0 0]))
+"Execution error (ClassCastException) at hex-editor.binary-utils/fn (form-init363557813137182152.clj:42)
+class [B cannot be cast to class java.lang.Character ([B and java.lang.Character are in module java.base of loader 'bootstrap'"
 
 (defn swap-endianness [bs]
   (reverse bs))
@@ -85,19 +144,14 @@
 
 (defn apply-fn [f bytes]
   (do
-    (println "Inside apply-fn: Bytes received:" bytes)
     (let [partitioned-bytes (partition (-> f meta :bytes) bytes)]
-      (println "Partitioned bytes:" partitioned-bytes)
       (map f partitioned-bytes))))
 
 (defn apply-conversions [conv-map type bytes]
   (let [f (get conv-map type)]
     (if f
       (do
-        (println "Bytes before apply-fn:" bytes)
         (let [applied-bytes (apply-fn f bytes)]
-          (println "Function to apply:" f)
-          (println "Applied bytes:" applied-bytes)
           applied-bytes))
       (throw (Exception. (str "Unknown type: " type))))))
 
@@ -122,3 +176,21 @@
 (parse-bytes [(byte 65) (byte 66) (byte 67)])
 
 (apply-conversions little-endian-conversions :int [(byte 65) (byte 0) (byte 0) (byte 0)])
+
+(defn parse-bytes-into-types [bytes types]
+  (loop [bytes bytes
+         types types
+         result []]
+    (if (empty? bytes)
+      result
+      (let [type (first types)
+            type-info (get type-conversions type)
+            size (:bytes (meta type-info))
+            to-convert (byte-array (take size bytes))]
+        (recur (drop size bytes)
+               (rest types)
+               (conj result (type-info to-convert)))))))
+
+
+; Usage
+(parse-bytes-into-types (byte-array [(byte 65) (byte 66) (byte 67) (byte 0) (byte 0) (byte 0)]) [:utf-8 :utf-8 :utf-8 :int])
