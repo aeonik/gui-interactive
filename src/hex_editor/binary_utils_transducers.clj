@@ -157,6 +157,10 @@
 (defn byte->uint8 [bs]
   (byte bs))
 
+(defn byte->utf8 [bs]
+  (try (String. (byte-array bs) "UTF-8")
+       (catch Exception _ :invalid)))
+
 (defn byte->uint16 [bs]
   (-> (.getShort (ByteBuffer/wrap (byte-array bs))) int))
 
@@ -192,7 +196,7 @@
 
 (def type-data
   {:hex     {:xform (map to-hex), :size 1}
-   :utf-8   {:xform (utf8-transducer), :size 1}
+   :utf-8   {:xform (map byte->utf8), :size 1}
    :uint8   {:xform (map (make-byte->int-transducer 1 byte->uint8 "uint8")), :size 1}
    :sint8   {:xform (map identity), :size 1}
    :uint16  {:xform (map byte->uint16), :size 2}
@@ -248,7 +252,7 @@
                logging-xform
                (dynamic-xform)
                logging-xform)
-             conj
+             merge
              (partitioned-xforms sizes coll)))
 
 (use 'clojure.tools.trace)
