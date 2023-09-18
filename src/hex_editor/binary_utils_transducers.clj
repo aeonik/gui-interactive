@@ -2,32 +2,40 @@
   (:require [clojure.pprint :refer [pprint]])
   (:import [java.nio ByteBuffer ByteOrder]))
 
-(defn partition-all-sizes [sizes coll]
-  (for [size sizes]
-    {:size size, :partitioned (partition-all size coll)}))
+(defn logging-xform [rf]
+  "Transducer for logging the input to the reduce function."
+  (fn
+    ([] (rf))
+    ([result] (rf result))
+    ([result input]
+     (do
+       (println "Debug xform: " input)
+       (rf result input)))))
 
 (defn reversing-txf [rf]
+  "Transducer for reversing the input to the reduce function. Used for endian swapping"
   (fn
     ([] (rf))
     ([result] (rf result))
     ([result input] (rf result (map reverse input)))))
 
-(def test-bytes (byte-array [(byte 32) (byte -84) (byte 32) (byte -84) (byte 32) (byte -84) (byte 32) (byte -84)]))
+(def test-bytes
+  "Test bytes it is the € symbol repeated 4 times."
+  (byte-array [(byte 32) (byte -84) (byte 32) (byte -84) (byte 32) (byte -84) (byte 32) (byte -84)]))
 (take 1 test-bytes)
 
-(defn partition-all-sizes-lazy
-  "Partition a collection into every size given the parameter sizes
-   This is a lazy version of partition-all-sizes"
-  [sizes coll]
-  (lazy-seq
-    (when-let [s (first sizes)]
-      (cons {:size s, :partitioned (partition-all s coll)}
-            (partition-all-sizes (rest sizes) coll)))))
+(defn partition-all-sizes-lazy [sizes coll]
+  (mapv (fn [size]
+          {:size size,
+           :partitioned (mapv vec (partition-all size coll))})
+        sizes))
 
 (partition-all-sizes-lazy [1 2 4 8] test-bytes)
 
 (time (transduce (map :partitioned) conj () (partition-all-sizes-lazy [1 2 4 8] test-bytes)))
 (time (transduce (map :partitioned) conj [] (partition-all-sizes-lazy [1 2 4 8] test-bytes)))
+
+;; This is a simple transducer example
 (transduce
   (comp
     (map :partitioned)
@@ -35,39 +43,83 @@
   conj []
   (partition-all-sizes-lazy [1 2 4 8] test-bytes))
 
-(map reverse (partition-all-sizes [1 2 4 8] test-bytes))
+;; Simple example showing endian change
+(map reverse (partition-all-sizes-lazy [1 2 4 8] test-bytes))
 
-(get (first (partition-all-sizes [1 2 4 8] test-bytes)) :partitioned)
+;; Getting values from the stream
+(get (first (partition-all-sizes-lazy [1 2 4 8] test-bytes)) :partitioned)
 
-(partition-all-sizes [1 2 4 8] test-bytes)
+(defn valid-utf8-seq? [buffer]
+  (let [b0 (first buffer)]
+    (cond
+      (< b0 0x80) (= (count buffer) 1)
+      (< b0 0xE0) (= (count buffer) 2)
+      (< b0 0xF0) (= (count buffer) 3)
+      :else (= (count buffer) 4))))
+
+(defn decode-utf8 [buffer]
+  "Currently working in demo, but broken in pipeline because this is a higher order transducer"
+  (let [b0 (first buffer)]
+    (cond
+      (< b0 0x80) (str (char b0))
+      (< b0 0xE0) (str (char (+ (bit-and b0 0x1F)
+                                (bit-shift-left (bit-and (nth buffer 1) 0x3F) 6))))
+      (< b0 0xF0) (str (char (+ (bit-and b0 0x0F)
+                                (bit-shift-left (bit-and (nth buffer 1) 0x3F) 6)
+                                (bit-shift-left (bit-and (nth buffer 2) 0x3F) 0))))
+      :else (let [code-point (+ (bit-shift-left (bit-and b0 0x07) 18)
+                                (bit-shift-left (bit-and (nth buffer 1) 0x3F) 12)
+                                (bit-shift-left (bit-and (nth buffer 2) 0x3F) 6)
+                                (bit-and (nth buffer 3) 0x3F))]
+              (if (< code-point 0x10000)
+                (str (char code-point))
+                (String/valueOf (Character/toChars code-point)))))))
+
+(defn utf8-transducer
+  ([] identity)
+  ([rf]
+    (let [buffer (volatile! [])]
+      (fn
+        ([] (rf))
+        ([result] (rf result))
+        ([result byte]
+         (let [b (byte byte)]
+           (if (< b 0x80)
+             (rf result (char b))
+             (do
+               (vswap! buffer conj b)
+               (when (valid-utf8-seq? @buffer)
+                 (rf result (decode-utf8 @buffer))
+                 (vreset! buffer []))
+               result))))))))
+
+(let [buffer (volatile! [0xF0 0x9F 0x92 0x83])]
+  (when (valid-utf8-seq? @buffer)
+    (println (decode-utf8 @buffer))))
 
 (defn make-to-hex-transducer [f]
-  (fn
-    ([] identity)
-    ([result] result)
-    ([result x]
-     (if (sequential? x)
-       (do
-         (println "Debug to-hex: " x)
-         (conj result (map f x)))
-       (do
-         (println "Debug to-hex: " x)
-         (conj result (f x)))))))
+  (fn [rf]
+    (fn
+      ([] (rf))
+      ([result] (rf result))
+      ([result x]
+       (let [hex-val (if (sequential? x)
+                       (map f x)
+                       (f x))]
+         (rf result hex-val))))))
 
 (defn to-hex
   "More robust to-hex conversion."
   ([x]
    (cond
-     (number? x) (format "%02x" x)
-     (vector? x) (map #(format "%02x" %) x)
-     :else (throw (ex-info "Unsupported type" {:type (type x)}))))
-  ([xs]
-   (map #(to-hex %) xs)))
-
+     (number? x) (format "%02X" x)
+     (vector? x) (map #(format "%02X" %) x)
+     (sequential? x) (map #(to-hex %) x)
+     :else (throw (ex-info "Unsupported type" {:type (type x)})))))
 
 (defn demo-hex []
   (let [ints [15 16 31 32 63 64]
-        xf-hex (map (make-to-hex-transducer to-hex))]
+        xf-hex (make-to-hex-transducer to-hex)]
     (println (transduce xf-hex conj [] ints))))
 
 (defn transduce-ints [xf input]
@@ -89,6 +141,17 @@
      (if (= byte-length (count bs))
        (conj result (f bs))
        (throw (IllegalArgumentException. (str "Expected a byte sequence of length " byte-length ", got: " bs)))))))
+
+(defn make-utf8-transducer []
+  (fn [rf]
+    (fn
+      ([] (rf))
+      ([result] (rf result))
+      ([result byte]
+       (let [utf8-val (try (String. (byte-array [byte]) "UTF-8")
+                           (catch Exception _ :invalid))]
+         (rf result utf8-val))))))
+
 (defn byte->uint8 [bs]
   (byte bs))
 
@@ -127,15 +190,15 @@
 
 (def type-data
   {:hex     {:xform (map to-hex), :size 1}
-   :utf-8   {:xform (map #(try (String. (byte-array [%]) "UTF-8") (catch Exception e :invalid))), :size 1}
-   :uint8 {:xform (map byte->uint8), :size 1}
-   :sint8 {:xform (map identity), :size 1}
-   :uint16 {:xform (map byte->uint16), :size 2}
-   :sint16 {:xform (map byte->sint16), :size 2}
-   :uint32 {:xform (map byte->uint32), :size 4}
-   :sint32 {:xform (map byte->sint32), :size 4}
-   :uint64 {:xform (map byte->uint64), :size 8}
-   :sint64 {:xform (map byte->sint64), :size 8}})
+   :utf-8   {:xform (utf8-transducer), :size 1}
+   :uint8   {:xform (map (make-byte->int-transducer 1 byte->uint8 "uint8")), :size 1}
+   :sint8   {:xform (map identity), :size 1}
+   :uint16  {:xform (map byte->uint16), :size 2}
+   :sint16  {:xform (map byte->sint16), :size 2}
+   :uint32  {:xform (map byte->uint32), :size 4}
+   :sint32  {:xform (map byte->sint32), :size 4}
+   :uint64  {:xform (map byte->uint64), :size 8}
+   :sint64  {:xform (map byte->sint64), :size 8}})
 
 (defn test-transform [bytes xform]
   (vec (sequence xform bytes)))
@@ -151,40 +214,11 @@
 (def uint64-test   (test-transform (partition-all 8 test-bytes) (get-in type-data [:uint64 :xform])))
 (def sint64-test   (test-transform (partition-all 8 test-bytes) (get-in type-data [:sint64 :xform])))
 
-(defn build-xform-pipeline
-  "Builds a composite transducer from a list of types."
-  [types]
-  (apply comp (map #(get-in type-data [% :xform]) types)))
-
 (def size 4)
 (defn get-applicable-types [size]
   (filter #(= (:size (get type-data %)) size) (keys type-data)))
 
-(defn partition-all-sizes-lazy [sizes coll]
-  (map (fn [size]
-          {:size size,
-           :partitioned (partition-all size coll)}) sizes))
-
-(defn partition-all-sizes-lazy [sizes coll]
-  (mapv (fn [size]
-          {:size size,
-           :partitioned (mapv vec (partition-all size coll))})
-        sizes))
-
-
 (def partitioned-bytes (partition-all-sizes-lazy [1 2 4 8] test-bytes))
-
-(defn dynamic-xform-for-size [size]
-  (let [applicable-types (filter #(= (:size (get type-data %)) size) (keys type-data))]
-    (fn [rf]
-      (fn
-        ([] (rf))
-        ([result] (rf result))
-        ([result input]
-         (rf result
-             (into {} (map (fn [atype]
-                             [atype (transduce (get-in type-data [atype :xform]) conj [] input)])
-                           applicable-types))))))))
 
 (defn dynamic-xform []
   (fn [rf]
@@ -207,106 +241,15 @@
 
 (defn main-pipeline [sizes coll]
   (transduce (comp
+               logging-xform
                (map #(assoc % :xforms (get-applicable-types (:size %))))
-               (dynamic-xform))
+               logging-xform
+               (dynamic-xform)
+               logging-xform)
              conj
              (partitioned-xforms sizes coll)))
 
+(use 'clojure.tools.trace)
 
 (def result (main-pipeline [1 2 4 8] test-bytes))
-
-
-(get-applicable-types 1)
-(defn get-applicable-types [size]
-  (filter #(= (:size (get type-data %)) size) (keys type-data)))
-
-(defn byte-array->vec [byte-arr]
-  (vec (map byte byte-arr)))
-
-(transduce
-  (comp
-    ;; Step 1: Add the applicable types (xforms) to the map
-    (map (fn [{:keys [size partitioned]}]
-           {:size size, :partitioned partitioned, :xforms (get-applicable-types size)}))
-
-    ;; Step 2: Map the type symbols to actual transformation functions
-    (map (fn [{:keys [size partitioned xforms]}]
-           {:size size,
-            :partitioned partitioned,
-            :xforms (map #(get-in type-data [% :xform]) xforms)}))
-
-
-    ;; Step 3: Apply the xforms to the partitioned data
-    #_(map (fn [{:keys [size partitioned xforms]}]
-           {:size size,
-            :transformed (map (fn [xf]
-                                (transduce xf conj partitioned))
-                              xforms)}))
-    )
-  conj
-  (partition-all-sizes-lazy [1 2 4 8] test-bytes))
-
-(defn check-types [elem]
-  (println "Type is: " (type elem))
-  elem) ; return the element back
-
-
-(defn transduce-seq
-  [xf partitioned]
-  (let [result (transduce xf conj [] partitioned)
-        numeric-result (filter number? result)] ; Remove non-numeric results
-    (println "Debug result: " result)
-    {:result (map byte-array->vec numeric-result)}))
-
-
-(map (fn [{:keys [size partitioned xforms]}]
-       (let [transformed-results (map (fn [xf]
-                                        (transduce-seq xf partitioned))
-                                      xforms)]
-         {:size size, :transformed transformed-results}))
-     (map (fn [{:keys [size partitioned]}]
-            {:size size,
-             :partitioned (vec partitioned), ; make sure partitioned is a vector
-             :xforms (map #(get-in type-data [% :xform]) (get-applicable-types size))})
-          (partition-all-sizes-lazy [1 2 4 8] test-bytes)))
-
-
-
-
-(transduce
-  (comp
-    (map (fn [{:keys [size partitioned]}]
-           {:size size, :partitioned (transduce (dynamic-xform-for-size size) conj [] partitioned)}))
-    ;; ... other xforms
-    )
-  conj []
-  (partition-all-sizes-lazy [1 2 4 8] test-bytes))
-
-(byte->sint16 (byte-array [(byte 32) (byte -84)]))
-(byte->sint16 [(byte 32) (byte -84)])
-
-(comment (defn parse-bytes-into-types [bytes types]
-  (let [byte-vec (vec bytes)
-        type-fn (fn [type vec] (into [] (:xform (get type-data type)) vec))
-        init-results (into {} (map (fn [t] [t []]) types))]
-    (loop [idx 0
-           result init-results]
-      (if (>= idx (count byte-vec))
-        (into {} (map (fn [[k v]] [k (flatten v)]) result)) ;; Flatten here
-        (let [updated-result (reduce (fn [acc type]
-                                       (let [size (:size (get type-data type 1))
-                                             to-convert (subvec byte-vec idx (+ idx size))
-                                             transformed (type-fn type to-convert)]
-                                         (update acc type conj transformed))) result types)
-              next-idx (+ idx (apply min (map (fn [t] (:size (get type-data t))) types)))]
-          (recur next-idx updated-result)))))))
-
-(def test-bytes (byte-array [(byte 32) (byte -84) (byte 32) (byte -84) (byte 32) (byte -84) (byte 32) (byte -84)]))
-
-(comment (def results (parse-bytes-into-types test-bytes [:hex :utf-8 :uint8-be :sint8-be])))
-
-(pprint results)
-
-(def my-transducer (comp (map to-hex) (map hex-to-int)))
-
-(transduce my-transducer conj [] (vec test-bytes))
+(pprint result)
