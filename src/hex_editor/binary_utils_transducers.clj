@@ -97,6 +97,8 @@
   (when (valid-utf8-seq? @buffer)
     (println (decode-utf8 @buffer))))
 
+
+
 (defn make-to-hex-transducer [f]
   (fn [rf]
     (fn
