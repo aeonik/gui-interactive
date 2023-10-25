@@ -10,6 +10,9 @@
            ubergraph/ubergraph                  {:mvn/version "0.8.2"}
            tupelo/tupelo                        {:mvn/version "23.07.04"}
            org.clj-commons/digest               {:mvn/version "1.4.100"}
+           net.clojars.john/injest              {:mvn/version "0.1.0-beta.8"}
+           net.cgrand/xforms                    {:mvn/version "0.19.4"}
+           criterium/criterium                  {:mvn/version "0.4.6"}
            cljfx/cljfx                          {:mvn/version "1.7.22"}
            babashka/fs                          {:mvn/version "0.4.18"}
            io.github.cljfx/dev                  {:mvn/version "1.0.36"}
@@ -21,6 +24,9 @@
            aleph/aleph                          {:mvn/version "0.6.2"}
            buddy/buddy-core                     {:mvn/version "1.11.423"}
            functionalbytes/rmap                 {:mvn/version "2.2.0"}
+           io.github.nextjournal/clerk          {:mvn/version "0.15.957"}
+           zprint/zprint                        {:mvn/version "1.2.8"}
+           tesser.core/tesser.core              {:mvn/version "1.0.6"}
            aeonik/file_hasher                   {:git/url "https://github.com/aeonik/file_hasher.git"
                                                  :sha     "3e592d3e688b38270ba3bd0a9e344ae2c8e5e87c"}
            }
@@ -28,7 +34,7 @@
  :aliases {:dev {:classpath-overrides {org.clojure/clojure nil} ;; for disabling the official compiler
                  :extra-deps          {com.github.jpmonettas/clojure        {:mvn/version "RELEASE"}
                                        com.github.jpmonettas/flow-storm-dbg {:mvn/version "RELEASE"}}
-                 :jvm-opts ["-Dflowstorm.startRecording=true"
-                              "-Dclojure.storm.instrumentEnable=true"
-                              "-Dclojure.storm.instrumentOnlyPrefixes=gui-interactive.,graph-view"
-                              "-Dflowstorm.theme=dark"]}}}
+                 :jvm-opts            ["-Dflowstorm.startRecording=true"
+                                       "-Dclojure.storm.instrumentEnable=true"
+                                       "-Dclojure.storm.instrumentOnlyPrefixes=gui-interactive.,graph-view"
+                                       "-Dflowstorm.theme=dark"]}}}
