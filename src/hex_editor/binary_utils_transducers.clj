@@ -2,25 +2,28 @@
   (:require [clojure.pprint :refer [pprint]])
   (:import [java.nio ByteBuffer ByteOrder]))
 
+;; I found this library that already does the binary conversions via graph path: https://github.com/clj-commons/byte-streams
+;; It doesn't look like it does transducers though
+
 (defn logging-xform [rf]
-  "Transducer for logging the input to the reduce function."
+  " Transducer for logging the input to the reduce function. "
   (fn
     ([] (rf))
     ([result] (rf result))
     ([result input]
      (do
-       (println "Debug xform: " input)
+       (println " Debug xform: " input)
        (rf result input)))))
 
 (defn reversing-txf [rf]
-  "Transducer for reversing the input to the reduce function. Used for endian swapping"
+  " Transducer for reversing the input to the reduce function. Used for endian swapping "
   (fn
     ([] (rf))
     ([result] (rf result))
     ([result input] (rf result (map reverse input)))))
 
 (def test-bytes
-  "Test bytes it is the € symbol repeated 4 times."
+  " Test bytes it is the € symbol repeated 4 times. "
   (byte-array [(byte 32) (byte -84) (byte 32) (byte -84) (byte 32) (byte -84) (byte 32) (byte -84)]))
 (take 1 test-bytes)
 
@@ -58,7 +61,7 @@
       :else (= (count buffer) 4))))
 
 (defn decode-utf8 [buffer]
-  "Currently working in demo, but broken in pipeline because this is a higher order transducer"
+  " Currently working in demo, but broken in pipeline because this is a higher order transducer "
   (let [b0 (first buffer)]
     (cond
       (< b0 0x80) (str (char b0))
@@ -111,13 +114,13 @@
          (rf result hex-val))))))
 
 (defn to-hex
-  "More robust to-hex conversion."
+  " More robust to-hex conversion. "
   ([x]
    (cond
-     (number? x) (format "%02X" x)
-     (vector? x) (map #(format "%02X" %) x)
+     (number? x) (format " %02X " x)
+     (vector? x) (map #(format " %02X " %) x)
      (sequential? x) (map #(to-hex %) x)
-     :else (throw (ex-info "Unsupported type" {:type (type x)})))))
+     :else (throw (ex-info " Unsupported type " {:type (type x)})))))
 
 (defn demo-hex []
   (let [ints [15 16 31 32 63 64]
@@ -137,12 +140,12 @@
     ([] identity)
     ([result] result)
     ([result bs]
-     (println "Debug BS Data Type:" (type bs))
+     (println " Debug BS Data Type: " (type bs))
      (when debug-message
-       (println "Debug" debug-message ":" bs))
+       (println " Debug " debug-message " : " bs))
      (if (= byte-length (count bs))
        (conj result (f bs))
-       (throw (IllegalArgumentException. (str "Expected a byte sequence of length " byte-length ", got: " bs)))))))
+       (throw (IllegalArgumentException. (str " Expected a byte sequence of length " byte-length ", got: " bs)))))))
 
 (defn make-utf8-transducer []
   (fn [rf]
@@ -150,7 +153,7 @@
       ([] (rf))
       ([result] (rf result))
       ([result byte]
-       (let [utf8-val (try (String. (byte-array [byte]) "UTF-8")
+       (let [utf8-val (try (String. (byte-array [byte]) " UTF-8 ")
                            (catch Exception _ :invalid))]
          (rf result utf8-val))))))
 
@@ -158,7 +161,7 @@
   (byte bs))
 
 (defn byte->utf8 [bs]
-  (try (String. (byte-array bs) "UTF-8")
+  (try (String. (byte-array bs) " UTF-8 ")
        (catch Exception _ :invalid)))
 
 (defn byte->uint16 [bs]
@@ -171,15 +174,15 @@
   (.getInt (ByteBuffer/wrap (byte-array bs))))
 
 (defn byte->sint32 [bs]
-  (println "Debug byte->sint32: " bs)
+  (println " Debug byte->sint32: " bs)
   (int (.getInt (ByteBuffer/wrap (byte-array bs)))))
 
 (defn byte->uint64 [bs]
-  (println "Debug byte->uint64: " bs)
+  (println " Debug byte->uint64: " bs)
   (.getLong (ByteBuffer/wrap (byte-array bs))))
 
 (defn byte->sint64 [bs]
-  (println "Debug byte->sint64: " bs)
+  (println " Debug byte->sint64: " bs)
   (long (.getLong (ByteBuffer/wrap (byte-array bs)))))
 
 
@@ -188,7 +191,7 @@
 
 (defn demo []
   (let [bytes (mapv byte-array [[0] [2] [4]])
-        xf-uint8 (map (make-byte->int-transducer byte->uint8 1 "byte->uint8"))]
+        xf-uint8 (map (make-byte->int-transducer byte->uint8 1 " byte->uint8 "))]
     (println (transduce xf-uint8 conj [] bytes))))
 
 (demo)
@@ -197,7 +200,7 @@
 (def type-data
   {:hex     {:xform (map to-hex), :size 1}
    :utf-8   {:xform (map byte->utf8), :size 1}
-   :uint8   {:xform (map (make-byte->int-transducer 1 byte->uint8 "uint8")), :size 1}
+   :uint8   {:xform (map (make-byte->int-transducer 1 byte->uint8 " uint8 ")), :size 1}
    :sint8   {:xform (map identity), :size 1}
    :uint16  {:xform (map byte->uint16), :size 2}
    :sint16  {:xform (map byte->sint16), :size 2}
@@ -205,6 +208,10 @@
    :sint32  {:xform (map byte->sint32), :size 4}
    :uint64  {:xform (map byte->uint64), :size 8}
    :sint64  {:xform (map byte->sint64), :size 8}})
+
+
+(defn to-uint [bits byte]
+  (bit-and (bit-shift-left (bit-and byte 0xFF) bits)))
 
 (defn test-transform [bytes xform]
   (vec (sequence xform bytes)))
