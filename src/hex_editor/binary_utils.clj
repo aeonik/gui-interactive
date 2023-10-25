@@ -3,9 +3,8 @@
             [ubergraph.core :as uber]
             [tupelo.core :as t])
   (:import (com.sun.jdi ShortValue)
+           (java.io InputStream)
            (java.nio ByteBuffer ByteOrder)))
-
-
 
 (defn byte-seq [^InputStream is size]
   (let [ib (byte-array size)]
@@ -26,10 +25,8 @@
       (mod 256)
       (byte)))
 
-
 (defn hex->uint [hex-str]
   (Integer/parseInt hex-str 16))
-
 
 (defn hex->num [#^String s]
   (Integer/parseUnsignedInt s 16))
@@ -58,9 +55,8 @@
   ;; GUID conversion logic here
   )
 
-
 (def type-conversions
-  {:utf-8 ^{:bytes 1} #(str (char %))
+  {:utf-8  ^{:bytes 1} #(str (char %))
    :uint8  ^{:bytes 1} #(bit-and % 0xFF)
    :int8   ^{:bytes 1} #(byte %)
    :hex    ^{:bytes 1} #(byte->hex %)
@@ -74,38 +70,41 @@
    :long   ^{:bytes 8} #(long %)
    :ulong  ^{:bytes 8} #(Byte/toUnsignedLong %) })
 
-
-(char (long (byte-array [(byte 65) (byte 66)])))
-"Execution error (ClassCastException) at hex-editor.binary-utils/eval27026 (binary_utils.clj:1).
-class [B cannot be cast to class java.lang.Number ([B and java.lang.Number are in module java.base of loader 'bootstrap'"
+(comment (char (long (byte-array [(byte 65) (byte 66)]))))
+;;Execution error (ClassCastException) at hex-editor.binary-utils/eval27026 (binary_utils.clj:1).
+;;class [B cannot be cast to class java.lang.Number ([B and java.lang.Number are in module java.base of loader 'bootstrap'
 (byte->hex (byte 114))
-(byte->hex (byte 190))
+(byte->hex (byte 120))
 (hex->byte "20")
-(hex->uint "")
+(hex->uint "A")
 
 (def test-bytes (byte-array [(byte 32) (byte -84) (byte 32) (byte -84) (byte 32) (byte -84) (byte 32) (byte -84)]))
 
 ;; Example Output after parsing test-bytes
-=> :hex ["20" "AC" "20" "AC" "20" "AC" "20" "AC"]
-=> :utf-8 [" " :invalid " " :invalid " " :invalid " " :invalid]
-=> :utf-16 [€ € € €]
-=> :uint8-be [32 172 32 172 32 172 32 172]
-=> :sint8-be [32 -84 32 -84 32 -84 32 -84]
-=> :uint16-be [8364 8364 8364 8364]
-=> :sint16-be [8364 8364 8364 8364]
-=> :uint16-le [44064 44064 44064 44064]
-=> :sint16-le [-21472 -21472 -21472 -21472]
-=> :uint32-be [548151468 548151468]
-=> :sint32-be [548151468 548151468]
-=> :uint32-le [2887822368 2887822368]
-=> :sint32-le [-1407144928 -1407144928]
-=> :uint64-be [2354292628862541996]
-=> :sint64-be [2354292628862541996]
-=> :uint64-le [12403102630105099296]
-=> :sint64-le [-6043641443604452320]
 
-(hex->uint "20AC20AC20AC20AC")
-(hex->byte "20AC")
+;;```edn
+;;=> :hex ["20" "AC" "20" "AC" "20" "AC" "20" "AC"]
+;;=> :utf-8 [" " :invalid " " :invalid " " :invalid " " :invalid]
+;;=> :utf-16 [€ € € €]
+;;=> :uint8-be [32 172 32 172 32 172 32 172]
+;;=> :sint8-be [32 -84 32 -84 32 -84 32 -84]
+;;=> :uint16-be [8364 8364 8364 8364]
+;;=> :sint16-be [8364 8364 8364 8364]
+;;=> :uint16-le [44064 44064 44064 44064]
+;;=> :sint16-le [-21472 -21472 -21472 -21472]
+;;=> :uint32-be [548151468 548151468]
+;;=> :sint32-be [548151468 548151468]
+;;=> :uint32-le [2887822368 2887822368]
+;;=> :sint32-le [-1407144928 -1407144928]
+;;=> :uint64-be [2354292628862541996]
+;;=> :sint64-be [2354292628862541996]
+;;=> :uint64-le [12403102630105099296]
+;;=> :sint64-le [-6043641443604452320]
+;; ```
+
+;; Broken
+(comment (hex->uint "20AC20AC20AC20AC"))
+(comment (hex->byte "20AC"))
 
 (byte->hex (byte 32))
 (byte->hex (byte 114))
@@ -122,11 +121,10 @@ class [B cannot be cast to class java.lang.Number ([B and java.lang.Number are i
 
 ((:short type-conversions) (byte 65))
 
-
 ((:long type-conversions) (byte 65))
-((:int type-conversions) (byte-array [65 0 0 0]))
-"Execution error (ClassCastException) at hex-editor.binary-utils/fn (form-init363557813137182152.clj:42)
-class [B cannot be cast to class java.lang.Character ([B and java.lang.Character are in module java.base of loader 'bootstrap'"
+(comment ((:int type-conversions) (byte-array [65 0 0 0])))
+;; Execution error (ClassCastException) at hex-editor.binary-utils/fn (form-init363557813137182152.clj:42) class [B cannot be cast to class java.lang.Character ([B and java.lang.Character are in module java.base of loader 'bootstrap'"
+
 
 (defn swap-endianness [bs]
   (reverse bs))
@@ -143,16 +141,14 @@ class [B cannot be cast to class java.lang.Character ([B and java.lang.Character
 (def little-endian-conversions (add-endianess type-conversions :little))
 
 (defn apply-fn [f bytes]
-  (do
-    (let [partitioned-bytes (partition (-> f meta :bytes) bytes)]
-      (map f partitioned-bytes))))
+  (let [partitioned-bytes (partition (-> f meta :bytes) bytes)]
+    (map f partitioned-bytes)))
 
 (defn apply-conversions [conv-map type bytes]
   (let [f (get conv-map type)]
     (if f
-      (do
-        (let [applied-bytes (apply-fn f bytes)]
-          applied-bytes))
+      (let [applied-bytes (apply-fn f bytes)]
+        applied-bytes)
       (throw (Exception. (str "Unknown type: " type))))))
 
 (defn single-or-seq [f x]
@@ -190,7 +186,6 @@ class [B cannot be cast to class java.lang.Character ([B and java.lang.Character
         (recur (drop size bytes)
                (rest types)
                (conj result (type-info to-convert)))))))
-
-
 ; Usage
-(parse-bytes-into-types (byte-array [(byte 65) (byte 66) (byte 67) (byte 0) (byte 0) (byte 0)]) [:utf-8 :utf-8 :utf-8 :int])
+;; class [B cannot be cast to class java.lang.Number ([B and java.lang.Number are in module java.base of loader 'bootstrap')
+(comment (parse-bytes-into-types (byte-array [(byte 65) (byte 66) (byte 67) (byte 0) (byte 0) (byte 0)]) [:utf-8 :utf-8 :utf-8 :int]))
