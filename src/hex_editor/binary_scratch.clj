@@ -4,7 +4,6 @@
 
 (def test-bytes (byte-array [(byte 32) (byte 127) (byte 64) (byte -82) (byte 2) (byte 40) (byte 32) (byte -84)]))
 
-
 (partition-all 1 test-bytes)
 
 (partition-all 2 test-bytes)
@@ -42,15 +41,7 @@
     (lazy-seq
       (cons (tag-byte (first s))
             (slide-and-tag-lazy (rest s))))))
-
-(defn bit-wise-representation
-  [b]
-  (Integer/toBinaryString (Byte/toUnsignedInt b)))
 (take 4 (slide-and-tag-lazy test-bytes))
-
-(defn unsigned-bit-shift-right
-  [x n]
-  (bit-and (bit-shift-right x n) 0x7F))
 
 (defn slide-and-chunk
   [n byte-stream]
@@ -74,7 +65,8 @@
 
 (def random-bytes (byte-array (repeatedly 10000 #(byte (- (rand-int 256) 128)))))
 
-(crit/bench (doall (take 500 (slide-and-chunk 16 random-bytes))))
+^{:nextjournal.clerk/viewer (assoc nextjournal.clerk.viewer/string-viewer :page-size 500) :nextjournal.clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench (doall (take 500 (slide-and-chunk 16 random-bytes)))))
 
 (defn byte-to-bits [b]
   (mapv #(bit-and 1 (bit-shift-right b %)) (range 7 -1 -1)))
@@ -95,16 +87,13 @@
                  (rf result chunk)
                  (recur))))))))))
 
-(defn slide-and-chunk [n bytes]
+(defn slide-and-chunk2 [n bytes]
   (sequence (comp (slide-and-chunk-xform n)) bytes))
 
-(crit/bench (doall (take 500 (slide-and-chunk 16 random-bytes))))
+^{:nextjournal.clerk/viewer (assoc nextjournal.clerk.viewer/string-viewer :page-size 500) :nextjournal.clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench (doall (take 500 (slide-and-chunk2 16 random-bytes)))))
 
-
-(defn byte-to-bits [b]
-  (map #(bit-and 1 (bit-shift-right b %)) (range 7 -1 -1)))
-
-(defn slide-and-chunk-xform [n]
+(defn slide-and-chunk-xform2 [n]
   (let [q (atom [])]
     (fn [rf]
       (fn
@@ -121,15 +110,12 @@
                    (recur (rf acc chunk)))
                  acc)))))))))
 
-(defn slide-and-chunk [n bytes]
-  (eduction (slide-and-chunk-xform n) bytes))
+(defn slide-and-chunk2 [n bytes]
+  (eduction (slide-and-chunk-xform2 n) bytes))
 
+^{:nextjournal.clerk/viewer (assoc nextjournal.clerk.viewer/string-viewer :page-size 500) :nextjournal.clerk/auto-expand-results? true}
 (let [random-bytes (take 1000 (repeatedly #(rand-int 256)))]
-  (crit/with-progress-reporting (crit/bench (doall (take 500 (slide-and-chunk 16 random-bytes))))))
-
-
-(defn byte-to-bits [b]
-  (map #(bit-and 1 (bit-shift-right b %)) (range 7 -1 -1)))
+  (with-out-str (crit/quick-bench (doall (take 500 (slide-and-chunk2 16 random-bytes))))))
 
 (defn byte-to-bits-xform []
   (mapcat byte-to-bits))
@@ -150,56 +136,48 @@
      (swap! q into (byte-to-bits input))
      (consume-bits n q rf result))))
 
-(defn slide-and-chunk-xform [n]
+(defn slide-and-chunk-xform3 [n]
   (let [q (atom [])]
     (fn [rf]
       (transduce-bits n q rf))))
 
-(defn slide-and-chunk [n bytes]
-  (eduction (slide-and-chunk-xform n) bytes))
+(defn slide-and-chunk3 [n bytes]
+  (eduction (slide-and-chunk-xform3 n) bytes))
 
+^{:nextjournal.clerk/viewer (assoc nextjournal.clerk.viewer/string-viewer :page-size 500) :nextjournal.clerk/auto-expand-results? true}
 (let [random-bytes (take 1000 (repeatedly #(rand-int 256)))]
-  (crit/bench (doall (take 500 (slide-and-chunk 16 random-bytes)))))
+  (with-out-str (crit/quick-bench (doall (take 500 (slide-and-chunk3 16 random-bytes))))))
 
-
-(defn byte-to-bits [b]
-  (println "Converting byte to bits: " b)
+(defn byte-to-bits2 [b]
   (let [bits (map #(bit-and 1 (bit-shift-right b %)) (range 7 -1 -1))]
-    (println "Bits: " bits)
     bits))
-
 
 (defn consume-bits [n q rf acc]
   (let [qq @q]
-    (println "Consuming bits: " qq)
     (if (>= (count qq) n)
       (let [chunk (take n qq)]
-        (println "Taking chunk: " chunk)
         (swap! q #(drop n %))
         (recur n q rf (rf acc chunk)))
       acc)))
 
-(defn transduce-bits [n q rf]
+(defn transduce-bits2 [n q rf]
   (fn
     ([] (rf))
     ([result] (rf result))
     ([result input]
-     (println "Received byte: " input)
-     (swap! q into (byte-to-bits input))
+     (swap! q into (byte-to-bits2 input))
      (consume-bits n q rf result))))
 
-(defn slide-and-chunk-xform [n]
+(defn slide-and-chunk-xform3 [n]
   (let [q (atom [])]
-    (println "Creating transducer with empty queue.")
     (fn [rf]
-      (transduce-bits n q rf))))
+      (transduce-bits2 n q rf))))
 
-(defn slide-and-chunk [n bytes]
-  (println "Educing bytes...")
-  (eduction (slide-and-chunk-xform n) bytes))
+(defn slide-and-chunk4 [n bytes]
+  (eduction (slide-and-chunk-xform3 n) bytes))
 
 (let [random-bytes (take 1000 (repeatedly #(rand-int 256)))]
-  (doall (take 500 (slide-and-chunk 16 random-bytes))))
+  (doall (take 500 (slide-and-chunk3 16 random-bytes))))
 
 (x>> (repeatedly #(rand-int 256))
      (mapcat byte-to-bits)

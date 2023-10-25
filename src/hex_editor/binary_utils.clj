@@ -70,9 +70,16 @@
    :long   ^{:bytes 8} #(long %)
    :ulong  ^{:bytes 8} #(Byte/toUnsignedLong %) })
 
+
+^{:nextjournal.clerk/visibility {:code :show :result :hide}}
 (comment (char (long (byte-array [(byte 65) (byte 66)]))))
+;; ```none
 ;;Execution error (ClassCastException) at hex-editor.binary-utils/eval27026 (binary_utils.clj:1).
 ;;class [B cannot be cast to class java.lang.Number ([B and java.lang.Number are in module java.base of loader 'bootstrap'
+;; ```
+
+;; Working examples
+^{:nextjournal.clerk/visibility {:code :show :result :show}}
 (byte->hex (byte 114))
 (byte->hex (byte 120))
 (hex->byte "20")
@@ -82,7 +89,7 @@
 
 ;; Example Output after parsing test-bytes
 
-;;```edn
+;; ```edn
 ;;=> :hex ["20" "AC" "20" "AC" "20" "AC" "20" "AC"]
 ;;=> :utf-8 [" " :invalid " " :invalid " " :invalid " " :invalid]
 ;;=> :utf-16 [€ € € €]
@@ -122,9 +129,14 @@
 ((:short type-conversions) (byte 65))
 
 ((:long type-conversions) (byte 65))
-(comment ((:int type-conversions) (byte-array [65 0 0 0])))
-;; Execution error (ClassCastException) at hex-editor.binary-utils/fn (form-init363557813137182152.clj:42) class [B cannot be cast to class java.lang.Character ([B and java.lang.Character are in module java.base of loader 'bootstrap'"
 
+^{:nextjournal.clerk/visibility {:code :show :result :hide}}
+(comment ((:int type-conversions) (byte-array [65 0 0 0])))
+;; ```none
+;; Execution error (ClassCastException) at hex-editor.binary-utils/fn (form-init363557813137182152.clj:42)
+;; class [B cannot be cast to class java.lang.Character ([B and java.lang.Character are in module java.base of loader 'bootstrap'"
+;; ```
+;; <br/><br/>
 
 (defn swap-endianness [bs]
   (reverse bs))
@@ -171,8 +183,15 @@
 
 (parse-bytes [(byte 65) (byte 66) (byte 67)])
 
-(apply-conversions little-endian-conversions :int [(byte 65) (byte 0) (byte 0) (byte 0)])
+^{:nextjournal.clerk/visibility {:code :show :result :hide}}
+(comment (apply-conversions little-endian-conversions :int [(byte 65) (byte 0) (byte 0) (byte 0)]))
+;; ```none
+;;Error printing return value (NullPointerException) at null (REPL:1).
+;;null
+;; ```
+;; <br/><br/>
 
+^{:nextjournal.clerk/visibility {:code :show :result :hide}}
 (defn parse-bytes-into-types [bytes types]
   (loop [bytes bytes
          types types
@@ -186,6 +205,17 @@
         (recur (drop size bytes)
                (rest types)
                (conj result (type-info to-convert)))))))
-; Usage
-;; class [B cannot be cast to class java.lang.Number ([B and java.lang.Number are in module java.base of loader 'bootstrap')
-(comment (parse-bytes-into-types (byte-array [(byte 65) (byte 66) (byte 67) (byte 0) (byte 0) (byte 0)]) [:utf-8 :utf-8 :utf-8 :int]))
+; Usage:
+
+^{:nextjournal.clerk/visibility {:code :show :result :hide}}
+(comment (parse-bytes-into-types (byte-array [(byte 65)
+                                              (byte 66)
+                                              (byte 67)
+                                              (byte 0)
+                                              (byte 0)
+                                              (byte 0)])
+                                 [:utf-8 :utf-8 :utf-8 :int]))
+;; ```none
+;; class [B cannot be cast to class java.lang.Number
+;; ([B and java.lang.Number are in module java.base of loader 'bootstrap')
+;; ```

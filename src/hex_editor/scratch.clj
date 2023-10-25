@@ -1,6 +1,5 @@
 (ns hex-editor.scratch)
 
-
 (defn byte-seq [^bytes arr size]
   (let [arr-len (alength arr)]
     ((fn step [start]
@@ -23,7 +22,6 @@
     (partition-all-sizes-lazy sizes coll)))
 
 (demo)
-
 
 (first (:partitioned (first (take 1 (demo)))))
 (type (first (:partitioned (first (take 1 (demo))))))
@@ -53,6 +51,7 @@
               (if (< code-point 0x10000)
                 (str (char code-point))
                 (String/valueOf (Character/toChars code-point)))))))
+
 (defn utf8-transducer-stateless [rf]
   (let [step (fn [result byte]
                (let [{:keys [buffer str-acc]} result
@@ -77,4 +76,10 @@
         res (transduce-utf8-stateless test-input)]
     (println "Result:" res)))
 
-(example-usage)
+^{:nextjournal.clerk/visibility {:code :show :result :hide}}
+(comment (example-usage))
+;; ```none
+;; Execution error (ClassCastException) at hex-editor.scratch/transduce-utf8-stateless (form-init14082250683920690850.clj:71).
+;; class java.lang.String cannot be cast to class clojure.lang.IFn (java.lang.String is in module java.base of loader 'bootstrap';
+;; clojure.lang.IFn is in unnamed module of loader 'app')
+;;```

@@ -22,10 +22,9 @@
 
 
 ^{:nextjournal.clerk/visibility {:code :hide :result :hide}}
-(clerk/serve! {:browse true :watch-paths ["notebooks" "src"]})
+(clerk/serve! {:host "aeonik.connett.io" :browse true :watch-paths ["notebooks" "src"]})
 
 ^{:nextjournal.clerk/visibility {:code :hide :result :hide}}
-
 
 ^{:nextjournal.clerk/visibility {:code :hide :result :hide}}
 (comment (do
@@ -238,7 +237,7 @@
            multi-partition))))
 
 
-
+(require '[clj-async-profiler.core :as prof])
 ;; ## The Sum of All Bits ☢️
 ;; This technique just concatenates all the binary representations into a single sequence.
 (=>> interesting-bytes
@@ -263,6 +262,16 @@
      (map (partial map (partial reduce +)))                 ;; sum up each inner list
      (map (partial reduce +))                               ;; sum up each outer list
      (x/reduce +))                                          ;; sum up all the sums
+
+
+(prof/profile (dotimes [i 10] (=>> interesting-bytes
+                               (mapcat byte-to-bits)
+                               multi-partition
+                               (map (partial map (partial reduce +)))
+                               (map (partial reduce +))
+                               (x/reduce +))))
+
+(prof/serve-ui 9090)
 
 
 ^{:nextjournal.clerk/visibility {:code :hide :result :hide}}

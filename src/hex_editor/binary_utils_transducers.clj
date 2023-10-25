@@ -3,6 +3,7 @@
   (:import [java.nio ByteBuffer ByteOrder]))
 
 ;; I found this library that already does the binary conversions via graph path: https://github.com/clj-commons/byte-streams
+
 ;; It doesn't look like it does transducers though
 
 (defn logging-xform [rf]

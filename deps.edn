@@ -1,34 +1,35 @@
 {:paths   ["src" "resources" "target/classes"]
- :deps    {org.clojure/clojure                  {:mvn/version "1.11.1"}
-           org.clojure/core.async               {:mvn/version "1.6.673"}
-           org.clojure/tools.trace              {:mvn/version "0.7.11"}
-           org.clojure/tools.namespace          {:mvn/version "1.3.0"}
-           org.clojure/tools.deps.graph         {:mvn/version "1.1.68"}
-           org.clojure/core.logic               {:mvn/version "1.0.1"}
-           org.typedclojure/typed.clj.runtime   {:mvn/version "1.1.3"}
-           org.typedclojure/typed.clj.checker   {:mvn/version "1.1.3"}
-           ubergraph/ubergraph                  {:mvn/version "0.8.2"}
-           tupelo/tupelo                        {:mvn/version "23.07.04"}
-           org.clj-commons/digest               {:mvn/version "1.4.100"}
-           net.clojars.john/injest              {:mvn/version "0.1.0-beta.8"}
-           net.cgrand/xforms                    {:mvn/version "0.19.4"}
-           criterium/criterium                  {:mvn/version "0.4.6"}
-           cljfx/cljfx                          {:mvn/version "1.7.22"}
-           babashka/fs                          {:mvn/version "0.4.18"}
-           io.github.cljfx/dev                  {:mvn/version "1.0.36"}
-           com.github.jpmonettas/flow-storm-dbg {:mvn/version "RELEASE"}
-           commons-io/commons-io                {:mvn/version "2.11.0"}
-           manifold/manifold                    {:mvn/version "0.4.1"}
-           teknql/tapestry                      {:mvn/version "0.3.0-SNAPSHOT"}
-           overtone/overtone                    {:mvn/version "0.10.6"}
-           aleph/aleph                          {:mvn/version "0.6.2"}
-           buddy/buddy-core                     {:mvn/version "1.11.423"}
-           functionalbytes/rmap                 {:mvn/version "2.2.0"}
-           io.github.nextjournal/clerk          {:mvn/version "0.15.957"}
-           zprint/zprint                        {:mvn/version "1.2.8"}
-           tesser.core/tesser.core              {:mvn/version "1.0.6"}
-           aeonik/file_hasher                   {:git/url "https://github.com/aeonik/file_hasher.git"
-                                                 :sha     "3e592d3e688b38270ba3bd0a9e344ae2c8e5e87c"}
+ :deps    {org.clojure/clojure                      {:mvn/version "1.11.1"}
+           org.clojure/core.async                   {:mvn/version "1.6.673"}
+           org.clojure/tools.trace                  {:mvn/version "0.7.11"}
+           org.clojure/tools.namespace              {:mvn/version "1.3.0"}
+           org.clojure/tools.deps.graph             {:mvn/version "1.1.68"}
+           org.clojure/core.logic                   {:mvn/version "1.0.1"}
+           org.typedclojure/typed.clj.runtime       {:mvn/version "1.1.3"}
+           org.typedclojure/typed.clj.checker       {:mvn/version "1.1.3"}
+           ubergraph/ubergraph                      {:mvn/version "0.8.2"}
+           tupelo/tupelo                            {:mvn/version "23.07.04"}
+           org.clj-commons/digest                   {:mvn/version "1.4.100"}
+           net.clojars.john/injest                  {:mvn/version "0.1.0-beta.8"}
+           net.cgrand/xforms                        {:mvn/version "0.19.4"}
+           criterium/criterium                      {:mvn/version "0.4.6"}
+           cljfx/cljfx                              {:mvn/version "1.7.22"}
+           babashka/fs                              {:mvn/version "0.4.18"}
+           io.github.cljfx/dev                      {:mvn/version "1.0.36"}
+           com.github.jpmonettas/flow-storm-dbg     {:mvn/version "RELEASE"}
+           commons-io/commons-io                    {:mvn/version "2.11.0"}
+           manifold/manifold                        {:mvn/version "0.4.1"}
+           teknql/tapestry                          {:mvn/version "0.3.0-SNAPSHOT"}
+           overtone/overtone                        {:mvn/version "0.10.6"}
+           aleph/aleph                              {:mvn/version "0.6.2"}
+           buddy/buddy-core                         {:mvn/version "1.11.423"}
+           functionalbytes/rmap                     {:mvn/version "2.2.0"}
+           io.github.nextjournal/clerk              {:mvn/version "0.15.957"}
+           zprint/zprint                            {:mvn/version "1.2.8"}
+           tesser.core/tesser.core                  {:mvn/version "1.0.6"}
+           com.clojure-goes-fast/clj-async-profiler {:mvn/version "1.1.1"}
+           aeonik/file_hasher                       {:git/url "https://github.com/aeonik/file_hasher.git"
+                                                     :sha     "3e592d3e688b38270ba3bd0a9e344ae2c8e5e87c"}
            }
 
  :aliases {:dev {:classpath-overrides {org.clojure/clojure nil} ;; for disabling the official compiler
