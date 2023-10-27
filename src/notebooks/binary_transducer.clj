@@ -1,6 +1,6 @@
 (ns notebooks.binary-transducer
   (:require [clojure.string :as str]
-            [injest.path :refer [+> +>> x>> =>>]]
+            [injest.path :refer [+> +>> x> x>> => =>> |> |>>]]
             [injest.state :as i.s]
             [net.cgrand.xforms :as x]
             [nextjournal.clerk :as clerk]
@@ -10,15 +10,15 @@
             [tesser.core :as t]
             [clojure.core.async :as async :refer [chan >!! <! go-loop]]))
 
-^{:nextjournal.clerk/visibility {:code :hide :result :hide}}
-(comment
-  (i.s/regxf! 'net.cgrand.xforms/transjuxt)
-  (i.s/regxf! 'net.cgrand.xforms/multiplex)
-  (i.s/regxf! 'net.cgrand.xforms/reduce)
-  (i.s/regxf! 'net.cgrand.xforms/window)
-  (i.s/regxf! 'net.cgrand.xforms/partition)
-  (i.s/regpxf! 'tesser.core/tesser)
-  (i.s/regpxf! 'tesser.core/fold))
+(i.s/regxf! 'net.cgrand.xforms/transjuxt)
+(i.s/regxf! 'net.cgrand.xforms/some)
+(i.s/regxf! 'net.cgrand.xforms/into)
+(i.s/regxf! 'net.cgrand.xforms/multiplex)
+(i.s/regxf! 'net.cgrand.xforms/reduce)
+(i.s/regxf! 'net.cgrand.xforms/window)
+(i.s/regxf! 'net.cgrand.xforms/partition)
+(i.s/regpxf! 'tesser.core/tesser)
+(i.s/regpxf! 'tesser.core/fold)
 
 
 ^{:nextjournal.clerk/visibility {:code :hide :result :hide}}
@@ -167,6 +167,7 @@
   (map (fn [index]
          (into [] (x/partition index 1) coll))
        (range 2 16)))
+
 (x>> interesting-bytes
      (mapcat byte-to-bits)
      (multi-partition-cgrand))
@@ -187,7 +188,7 @@
 (def dest-channel (chan 100))
 
 ^{:nextjournal.clerk/visibility {:code :show :result :hide}}
-(def captured-output (atom []))  ;; Atom to hold channel data for Clerk
+(def captured-output (atom []))                             ;; Atom to hold channel data for Clerk
 
 ;; ##### Populate src-channel with 10 random bytes
 ^{:nextjournal.clerk/visibility {:code :show :result :hide}}
@@ -211,7 +212,7 @@
     (when (< i n)
       (when-let [v (<! dest-channel)]
         (println "Transformed Data: " v)
-        (swap! captured-output conj v))  ;; Side-effect to capture output
+        (swap! captured-output conj v))                     ;; Side-effect to capture output
       (recur (inc i)))))
 
 ^{:nextjournal.clerk/visibility {:code :hide :result :show}}
@@ -265,11 +266,11 @@
 
 
 (prof/profile (dotimes [i 10] (=>> interesting-bytes
-                               (mapcat byte-to-bits)
-                               multi-partition
-                               (map (partial map (partial reduce +)))
-                               (map (partial reduce +))
-                               (x/reduce +))))
+                                   (mapcat byte-to-bits)
+                                   multi-partition
+                                   (map (partial map (partial reduce +)))
+                                   (map (partial reduce +))
+                                   (x/reduce +))))
 
 (prof/serve-ui 9090)
 
@@ -396,7 +397,7 @@
                      flatten
                      (x/reduce +))))                        ;; sum up all the sums
 
-;; ### Finally `(apply +)` instead of `(x/reduce +)` with `partial`
+;; ### `(apply +)` instead of `(x/reduce +)` with `partial`
 ^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
 (with-out-str (crit/quick-bench
                 (=>> random-bytes
@@ -406,6 +407,28 @@
                      (map (partial apply +))                ;; sum up each outer list
                      (x/reduce +))))                        ;; sum up all the sums
 
+
+;; ### `(pmap)` with `(x/reduce +)` with `partial`
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     (pmap (partial pmap (partial reduce +))) ;; sum up each inner list
+                     (pmap (partial reduce +))              ;; sum up each outer list
+                     (x/reduce +))))                        ;; sum up all the sums
+
+
+;;; ### `|>>` Parallel pipeline
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (|>> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     (pmap (partial pmap (partial reduce +))) ;; sum up each inner list
+                     (pmap (partial reduce +))              ;; sum up each outer list
+                     (x/reduce +))))                        ;; sum up all the sums
+
 ;; ### Comparing to tresser:
 ^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
 (with-out-str (crit/quick-bench
@@ -413,6 +436,49 @@
                      (mapcat byte-to-bits)
                      multi-partition
                      #(t/tesser % (t/fold + (t/mapcat concat))))))
+
+;; #### Testing tressor with varying threading macros
+
+;; `->>`
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     #(->> (t/mapcat concat)
+                           (t/fold +)
+                           (t/tesser %)))))
+
+;; `+>>` Enhanced path threading (shouldn't make a difference)
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     #(+>> (t/mapcat concat)
+                           (t/fold +)
+                           (t/tesser %)))))
+
+;; `x>>` Auto compose transudcers, not sure if this makes any difference
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     #(x>> (t/mapcat concat)
+                           (t/fold +)
+                           (t/tesser %)))))
+
+;; `|>>` Testing parallel pipeline rather than parallel fold, theoretically should be slower
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (|>> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     #(x>> (t/mapcat concat)
+                           (t/fold +)
+                           (t/tesser %)))))
+
 
 ;; Note: This is 43.6752443 nanoseconds of total processing per bit.
 
@@ -442,6 +508,56 @@
 (->> (t/mapcat seq)                                         ; explode strings into seqs of chars
      (t/set)
      (t/tesser [["meow" "mix"]]))
+
+;; ### Testing `transjuxt` with `=>>`
+(=>> [12 15]
+     (mapcat byte-to-bits)
+     multi-partition
+     (mapcat concat))
+
+(=>> [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16]
+     multi-partition)
+
+(=>> [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16]
+     multi-partition
+     (x/transjuxt [(comp (mapcat concat) (mapcat concat) (x/into []))])
+     first
+     first)
+
+;; TODO: Figure out how to get `transjuxt` working with `injest` macros.
+;; `transjuxt` may be the same as `=>>`
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     (x/transjuxt [(comp (mapcat concat) (mapcat concat) (x/into []))])
+                     first
+                     first
+                     (x/reduce +))))
+
+
+;; ### Testing `multiplex` vs `=>>`
+(=>> (range 3)
+     (mapcat #(do [[:up (inc %)] [:down (dec %)]])))
+(into [] (x/multiplex {:up (map inc) :down (map dec)}) (range 3))
+
+
+;; ### Performance Testing `multiplex`
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> (range 10000)
+                     (mapcat #(do [[:up (inc %)] [:down (dec %)]])))))
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (into [] (x/multiplex {:up (map inc) :down (map dec)}) (range 10000))))
+
+;; Turns out `multiplex` is probably not what I want. Each value gets each function applied to it in parallel...
+(=>> [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16]
+     multi-partition
+     (x/multiplex [(mapcat concat)]))
 
 
 ;; Here I am trying to clean up the nested reduce logic.
