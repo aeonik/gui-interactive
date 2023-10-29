@@ -10,21 +10,20 @@
             [tesser.core :as t]
             [clojure.core.async :as async :refer [chan >!! <! go-loop]]))
 
-(i.s/regxf! 'net.cgrand.xforms/transjuxt)
-(i.s/regxf! 'net.cgrand.xforms/some)
-(i.s/regxf! 'net.cgrand.xforms/into)
-(i.s/regxf! 'net.cgrand.xforms/multiplex)
-(i.s/regxf! 'net.cgrand.xforms/reduce)
-(i.s/regxf! 'net.cgrand.xforms/window)
-(i.s/regxf! 'net.cgrand.xforms/partition)
-(i.s/regpxf! 'tesser.core/tesser)
-(i.s/regpxf! 'tesser.core/fold)
+^{:nextjournal.clerk/visibility {:code :hide :result :hide} ::clerk/no-cache :true}
+;; Don't cache these, clerk will only cache the return values, and not rexecute the functions for side effects
+;; Clerk does provide caching of side effects, but I don't understand the documentation.
+(do
+  (i.s/regxf! 'net.cgrand.xforms/transjuxt)
+  (i.s/regxf! 'net.cgrand.xforms/some)
+  (i.s/regxf! 'net.cgrand.xforms/into)
+  (i.s/regxf! 'net.cgrand.xforms/multiplex)
+  (i.s/regxf! 'net.cgrand.xforms/reduce)
+  (i.s/regxf! 'net.cgrand.xforms/window)
+  (i.s/regxf! 'net.cgrand.xforms/partition)
+  (i.s/regpxf! 'tesser.core/tesser)
+  (i.s/regpxf! 'tesser.core/fold))
 
-
-^{:nextjournal.clerk/visibility {:code :hide :result :hide}}
-(clerk/serve! {:host "aeonik.connett.io" :browse true :watch-paths ["notebooks" "src"]})
-
-^{:nextjournal.clerk/visibility {:code :hide :result :hide}}
 
 ^{:nextjournal.clerk/visibility {:code :hide :result :hide}}
 (comment (do
@@ -238,7 +237,6 @@
            multi-partition))))
 
 
-(require '[clj-async-profiler.core :as prof])
 ;; ## The Sum of All Bits ☢️
 ;; This technique just concatenates all the binary representations into a single sequence.
 (=>> interesting-bytes
@@ -265,14 +263,33 @@
      (x/reduce +))                                          ;; sum up all the sums
 
 
-(prof/profile (dotimes [i 10] (=>> interesting-bytes
-                                   (mapcat byte-to-bits)
-                                   multi-partition
-                                   (map (partial map (partial reduce +)))
-                                   (map (partial reduce +))
-                                   (x/reduce +))))
+(comment (require '[clj-async-profiler.core :as prof])
 
-(prof/serve-ui 9090)
+         (prof/profile (=>> random-bytes
+                            (mapcat byte-to-bits)
+                            multi-partition
+                            (map (partial map (partial reduce +)))
+                            (map (partial reduce +))
+                            (x/reduce +)))
+
+         (prof/profile (=>> random-bytes
+                            (mapcat byte-to-bits)
+                            multi-partition
+                            (map (fn [x] (map #(reduce + %) x)))
+                            (map #(reduce + %))
+                            (x/reduce +)))
+
+
+
+         (prof/profile
+           (=>> random-bytes
+                (mapcat byte-to-bits)
+                multi-partition
+                #(t/tesser % (t/fold + (t/mapcat concat)))))
+
+         (prof/generate-diffgraph 3 4 {})
+
+         (prof/serve-ui 9090))
 
 
 ^{:nextjournal.clerk/visibility {:code :hide :result :hide}}
@@ -348,7 +365,7 @@
                      (map (partial apply +))                ;; sum up each outer list
                      (apply +))))                           ;; sum up all the sums
 
-;; ### `xforms/reduce` + `flatten`
+;; ### `xforms/reduce` + `(mapcat concat)`
 ^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
 (with-out-str (crit/quick-bench
                 (=>> random-bytes
@@ -407,27 +424,7 @@
                      (map (partial apply +))                ;; sum up each outer list
                      (x/reduce +))))                        ;; sum up all the sums
 
-
-;; ### `(pmap)` with `(x/reduce +)` with `partial`
-^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
-(with-out-str (crit/quick-bench
-                (=>> random-bytes
-                     (mapcat byte-to-bits)
-                     multi-partition
-                     (pmap (partial pmap (partial reduce +))) ;; sum up each inner list
-                     (pmap (partial reduce +))              ;; sum up each outer list
-                     (x/reduce +))))                        ;; sum up all the sums
-
-
-;;; ### `|>>` Parallel pipeline
-^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
-(with-out-str (crit/quick-bench
-                (|>> random-bytes
-                     (mapcat byte-to-bits)
-                     multi-partition
-                     (pmap (partial pmap (partial reduce +))) ;; sum up each inner list
-                     (pmap (partial reduce +))              ;; sum up each outer list
-                     (x/reduce +))))                        ;; sum up all the sums
+                                                     ;; sum up all the sums
 
 ;; ### Comparing to tresser:
 ^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
@@ -566,7 +563,7 @@
 (defn sliding-windows
   [sizes coll]
   (let [init-windows (mapv (fn [size] (vec (repeat size nil))) sizes)
-        state        (atom {:windows init-windows :input coll})]
+        state (atom {:windows init-windows :input coll})]
     (fn step []
       (lazy-seq
         (when-let [s (seq @(:input state))]
@@ -580,7 +577,7 @@
 (defn sliding-windows-tx [sizes]
   (fn [rf]
     (let [init-windows (mapv (fn [size] (vec (repeat size nil))) sizes)
-          state        (atom {:windows init-windows})]
+          state (atom {:windows init-windows})]
       (fn
         ([] (rf))
         ([result] (rf result))
@@ -594,14 +591,14 @@
 (defn custom-window
   [n f invf]
   (fn [rf]
-    (let [ring  (object-array n)
-          vi    (volatile! (- n))
+    (let [ring (object-array n)
+          vi (volatile! (- n))
           vwacc (volatile! (f))]
       (fn
         ([] (rf))
         ([acc] (rf acc))
         ([acc x]
-         (let [i    @vi
+         (let [i @vi
                wacc @vwacc]                                 ; window accumulator
            (aset ring (if (neg? i) (+ n i) i) x)
            (if (neg? i)

@@ -17,3 +17,4 @@ pom.xml.asc
 gui-interactive.iml
 /native/
 /.clerk/
+/.clj-kondo/

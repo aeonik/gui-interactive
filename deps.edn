@@ -32,10 +32,11 @@
                                                      :sha     "3e592d3e688b38270ba3bd0a9e344ae2c8e5e87c"}
            }
 
- :aliases {:dev {:classpath-overrides {org.clojure/clojure nil} ;; for disabling the official compiler
-                 :extra-deps          {com.github.jpmonettas/clojure        {:mvn/version "RELEASE"}
-                                       com.github.jpmonettas/flow-storm-dbg {:mvn/version "RELEASE"}}
-                 :jvm-opts            ["-Dflowstorm.startRecording=true"
-                                       "-Dclojure.storm.instrumentEnable=true"
-                                       "-Dclojure.storm.instrumentOnlyPrefixes=gui-interactive.,graph-view"
-                                       "-Dflowstorm.theme=dark"]}}}
+ :aliases {:dev   {:extra-paths ["dev"]}
+           :trace {:classpath-overrides {org.clojure/clojure nil} ;; for disabling the official compiler
+                   :extra-deps          {com.github.jpmonettas/clojure        {:mvn/version "RELEASE"}
+                                         com.github.jpmonettas/flow-storm-dbg {:mvn/version "RELEASE"}}
+                   :jvm-opts            ["-Dflowstorm.startRecording=true"
+                                         "-Dclojure.storm.instrumentEnable=true"
+                                         "-Dclojure.storm.instrumentOnlyPrefixes=gui-interactive.,graph-view"
+                                         "-Dflowstorm.theme=dark"]}}}
