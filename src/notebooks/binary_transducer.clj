@@ -1,13 +1,17 @@
 (ns notebooks.binary-transducer
   (:require [clojure.string :as str]
+            [clojure.core.reducers :as r]
             [injest.path :refer [+> +>> x> x>> => =>> |> |>>]]
             [injest.state :as i.s]
             [net.cgrand.xforms :as x]
             [nextjournal.clerk :as clerk]
             [nextjournal.clerk.viewer :as v]
             [criterium.core :as crit]
+            [uncomplicate.fluokitten.jvm :as jvm]
             [zprint.core :as z]
             [tesser.core :as t]
+            [meander.epsilon :as m]
+            [uncomplicate.fluokitten.core :as flk]
             [clojure.core.async :as async :refer [chan >!! <! go-loop]]))
 
 ^{:nextjournal.clerk/visibility {:code :hide :result :hide} ::clerk/no-cache :true}
@@ -224,8 +228,58 @@
   (crit/quick-bench
     (dorun
       (x>> random-bytes
+           doall
            (mapcat byte-to-bits)
-           multi-partition))))
+           doall
+           multi-partition
+           doall))))
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str
+  (crit/quick-bench
+    (dorun
+      (->> random-bytes
+           doall
+           (mapcat byte-to-bits)
+           doall
+           multi-partition
+           doall))))
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str
+  (crit/quick-bench
+    (dorun
+      (->> random-bytes
+           doall
+           (mapcat byte-to-bits)
+           doall
+           multi-partition
+           doall))))
+
+
+
+(time
+  (let [f (->> random-bytes
+               doall
+               (mapcat byte-to-bits)
+               doall
+               multi-partition
+               doall)] (dorun f)
+                       (dorun f)))
+
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str
+  (crit/quick-bench
+    (let [realized-result (->> random-bytes
+                               (doall)
+                               (mapcat byte-to-bits)
+                               (doall)
+                               multi-partition
+                               (doall))]
+      (dorun realized-result))))
+
+
 
 ;; #### Performance Test of `multi-partition` against 10k `random-bytes` with `=>>`
 ^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
@@ -234,7 +288,8 @@
     (dorun
       (=>> random-bytes
            (mapcat byte-to-bits)
-           multi-partition))))
+           multi-partition
+           doall))))
 
 
 ;; ## The Sum of All Bits ☢️
@@ -261,7 +316,6 @@
      (map (partial map (partial reduce +)))                 ;; sum up each inner list
      (map (partial reduce +))                               ;; sum up each outer list
      (x/reduce +))                                          ;; sum up all the sums
-
 
 (comment (require '[clj-async-profiler.core :as prof])
 
@@ -318,12 +372,186 @@
      flatten
      count)
 
-(=>> random-bytes
-     (mapcat byte-to-bits)
-     multi-partition
-     (map (partial map (partial reduce +)))                 ;; sum up each inner list
-     (map (partial reduce +))                               ;; sum up each outer list
-     (x/reduce +))                                          ;; sum up all the sums
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     (map (partial map (partial reduce +))) ;; sum up each inner list
+                     (map (partial reduce +))               ;; sum up each outer list
+                     (x/reduce +))))                        ;; sum up all the sums
+
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (->> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     (pmap (partial map (partial reduce +))) ;; Parallel sum up each inner list
+                     (pmap (partial reduce +))              ;; Parallel sum up each outer list
+                     (reduce +))))
+
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (->> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     (r/flatten)
+                     (r/fold +))))
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     (r/flatten)
+                     (r/fold +))))
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (->> (t/mapcat concat)
+                     (t/fold +)
+                     (t/tesser (->> random-bytes
+                                    (mapcat byte-to-bits)
+                                    multi-partition)))))
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     #(t/tesser % (t/fold + (t/mapcat concat))))))
+
+(def partitioned-interesting-bytes (->> interesting-bytes
+                                        (mapcat byte-to-bits)
+                                        multi-partition))
+(def partitioned-random-bytes (->> random-bytes
+                                   (mapcat byte-to-bits)
+                                   multi-partition))
+
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     (pmap (partial map (partial r/fold +)))
+                     (pmap (partial r/fold +))
+                     (r/fold +))))
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> partitioned-random-bytes
+                     (pmap (partial map (partial r/fold +))) ;; Parallel sum up each inner list
+                     (pmap (partial r/fold +))              ;; Parallel sum up each outer list
+                     (r/fold +))))
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> partitioned-random-bytes
+                     (pmap (partial map (partial r/reduce +))) ;; Parallel sum up each inner list
+                     (pmap (partial r/reduce +))            ;; Parallel sum up each outer list
+                     (r/reduce +))))
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> partitioned-random-bytes
+                     (pmap (partial map (partial reduce +))) ;; Parallel sum up each inner list
+                     (pmap (partial reduce +))              ;; Parallel sum up each outer list
+                     (reduce +))))
+
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> partitioned-random-bytes
+                     (map (partial map (partial reduce +)))
+                     (map (partial reduce +))
+                     (reduce +))))
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (->> partitioned-random-bytes
+                     (map (partial map (partial reduce +)))
+                     (map (partial reduce +))
+                     (reduce +))))
+
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> partitioned-random-bytes
+                     (map (partial map (partial r/fold +))) ;; Parallel sum up each inner list
+                     (map (partial r/fold +))               ;; Parallel sum up each outer list
+                     (r/fold +))))
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> partitioned-random-bytes
+                     (map (partial map (partial reduce +)))
+                     (map (partial reduce +))
+                     (reduce +))))
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     (pmap (partial map (partial r/fold +))) ;; Parallel sum up each inner list
+                     (pmap (partial r/fold +))              ;; Parallel sum up each outer list
+                     (r/fold +))))
+
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (->> random-bytes
+                     (mapcat byte-to-bits)
+                     multi-partition
+                     (pmap (partial map (partial reduce +))) ;; Parallel sum up each inner list
+                     (pmap (partial reduce +))              ;; Parallel sum up each outer list
+                     (reduce +))))
+
+(->> [[[1 2] [2 3]] [[12 13 14]]]
+     (r/mapcat concat)
+     (r/foldcat)
+     (pmap (partial r/fold +))
+     (r/fold +))
+
+
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (->> partitioned-random-bytes
+                     (r/mapcat concat)
+                     (r/foldcat)
+                     (pmap (partial r/fold +))
+                     (r/fold +))))
+
+(->> [[[1 2] [2 3]] [[12 13 14]]]
+     (flk/fold)
+     (flk/fold)
+     (flk/fold))
+
+(defn sum-reducer
+  ([] 0)
+  ([acc] acc)
+  ([acc val]
+   (+ acc val)))
+
+(defn recursive-fold [coll]
+  (r/fold
+    (fn
+      ([] 0)
+      ([acc] acc)
+      ([acc val]
+       (if (coll? val)
+         (+ acc (recursive-fold val))
+         (+ acc val))))
+    coll))
+(->> partitioned-random-bytes
+     recursive-fold
+     time)
+
+
 
 ;; ### `xforms/reduce` + nested `reduce`
 ^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
@@ -343,7 +571,8 @@
                      multi-partition
                      (map (fn [x] (map #(apply + %) x)))    ;; sum up each inner list
                      (map #(apply + %))                     ;; sum up each outer list
-                     (x/reduce +))))                        ;; sum up all the sums
+                     (x/reduce +))))
+;; sum up all the sums
 
 ;; ### Trying `(apply +)` instead of `(x/reduce +)`
 ^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
@@ -383,7 +612,7 @@
                      multi-partition
                      (map (fn [x] (map #(reduce + %) x)))   ;; sum up each inner list
                      (map #(reduce + %))                    ;; sum up each outer list
-                     (x/reduce +))))                        ;; sum up all the sums
+                     (reduce +))))                          ;; sum up all the sums
 
 ;; ### `clojure.core/reduce` + nested `reduce` with `partial`
 ^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
@@ -424,7 +653,7 @@
                      (map (partial apply +))                ;; sum up each outer list
                      (x/reduce +))))                        ;; sum up all the sums
 
-                                                     ;; sum up all the sums
+;; sum up all the sums
 
 ;; ### Comparing to tresser:
 ^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
@@ -432,6 +661,11 @@
                 (=>> random-bytes
                      (mapcat byte-to-bits)
                      multi-partition
+                     #(t/tesser % (t/fold + (t/mapcat concat))))))
+
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> partitioned-random-bytes
                      #(t/tesser % (t/fold + (t/mapcat concat))))))
 
 ;; #### Testing tressor with varying threading macros
@@ -476,8 +710,13 @@
                            (t/fold +)
                            (t/tesser %)))))
 
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(with-out-str (crit/quick-bench
+                (=>> partitioned-random-bytes
+                     #(x>> (t/mapcat concat)
+                           (t/fold +)
+                           (t/tesser %)))))
 
-;; Note: This is 43.6752443 nanoseconds of total processing per bit.
 
 ;; ### More complicated version using tesser custom fold logic
 ^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
@@ -557,13 +796,48 @@
      (x/multiplex [(mapcat concat)]))
 
 
+;; ### Trying out meander for this problem
+^{::clerk/viewer (assoc v/string-viewer :page-size 500) ::clerk/auto-expand-results? true}
+(m/rewrite [() '(1 2 3)]                                    ;; Initial state
+           ;; Intermediate step with recursion
+           [?current (?head & ?tail)]
+           (m/cata [(?head & ?current) ?tail])
+
+           ;; Done
+           [?current ()]
+           ?current)
+
+;; The following code rewrite code is broken
+;; ```none
+;; Execution error (ClassCastException) at notebooks.binary-transducer/eval48806$C$state (binary_transducer.clj:819).
+;; class clojure.lang.LazySeq cannot be cast to class java.lang.Number (clojure.lang.LazySeq is in unnamed module of loader 'app'; java.lang.Number is in module java.base of loader 'bootstrap')
+;; ```
+(comment (m/rewrite [() partitioned-interesting-bytes]      ;; Initial state
+                    ;; Intermediate step with recursion
+                    [?current (?head & ?tail)]
+                    (m/cata [(m/app + (?head & ?current)) ?tail])
+
+                    ;; Done
+                    [?current ()]
+                    ?current))
+
+(comment (m/rewrite [0 partitioned-interesting-bytes]       ;; Initialize accumulator with 0
+
+                    ;; When the next item is a number, add it
+                    [?current (?head & ?tail)]
+                    (m/cata [(m/app + ?head ?current) ?tail])
+
+                    ;; When done
+                    [?current ()]
+                    ?current))
+
 ;; Here I am trying to clean up the nested reduce logic.
 
 ;;  Trying to write my own sliding window function:
 (defn sliding-windows
   [sizes coll]
   (let [init-windows (mapv (fn [size] (vec (repeat size nil))) sizes)
-        state (atom {:windows init-windows :input coll})]
+        state        (atom {:windows init-windows :input coll})]
     (fn step []
       (lazy-seq
         (when-let [s (seq @(:input state))]
@@ -577,7 +851,7 @@
 (defn sliding-windows-tx [sizes]
   (fn [rf]
     (let [init-windows (mapv (fn [size] (vec (repeat size nil))) sizes)
-          state (atom {:windows init-windows})]
+          state        (atom {:windows init-windows})]
       (fn
         ([] (rf))
         ([result] (rf result))
@@ -591,14 +865,14 @@
 (defn custom-window
   [n f invf]
   (fn [rf]
-    (let [ring (object-array n)
-          vi (volatile! (- n))
+    (let [ring  (object-array n)
+          vi    (volatile! (- n))
           vwacc (volatile! (f))]
       (fn
         ([] (rf))
         ([acc] (rf acc))
         ([acc x]
-         (let [i @vi
+         (let [i    @vi
                wacc @vwacc]                                 ; window accumulator
            (aset ring (if (neg? i) (+ n i) i) x)
            (if (neg? i)
