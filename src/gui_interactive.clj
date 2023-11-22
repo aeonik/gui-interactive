@@ -36,7 +36,8 @@
 
 (defmulti handle :event/type)
 
-(defmethod handle ::on-expanded-changed [{:keys [id fx/event]}]
+(defmethod handle ::on-expanded-changed
+  [{:keys [id fx/event]}]
   (swap!
     *state
     #(-> %

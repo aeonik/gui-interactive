@@ -28,7 +28,7 @@
   (doall (file-seq (clojure.java.io/file path))))
 
 
-(list-files-and-dirs "/home/dave")
+(comment (list-files-and-dirs "/home/dave"))
 
 (defmulti event-handler :event/type)
 
