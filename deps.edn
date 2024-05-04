@@ -41,4 +41,9 @@
                    :jvm-opts            ["-Dflowstorm.startRecording=true"
                                          "-Dclojure.storm.instrumentEnable=true"
                                          "-Dclojure.storm.instrumentOnlyPrefixes=gui-interactive.,graph-view"
-                                         "-Dflowstorm.theme=dark"]}}}
+                                         "-Dflowstorm.theme=dark"]}
+           :test  {:jvm-opts    ["-Xmx10G"]
+                   :extra-paths ["test"]
+                   :extra-deps  {org.clojure/test.check {:mvn/version "1.1.1"}
+                                 io.github.cognitect-labs/test-runner
+                                 {:git/tag "v0.5.0" :git/sha "48c3c67"}}}}}
