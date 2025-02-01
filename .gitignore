@@ -18,3 +18,5 @@ gui-interactive.iml
 /native/
 /.clerk/
 /.clj-kondo/
+.swp
+.DS_Store
