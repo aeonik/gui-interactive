@@ -1,9 +1,9 @@
 (ns examples.e38-lazy-loaded-tree-view
   (:require [cljfx.api :as fx]))
 
-(require '[flow-storm.api :as fs-api])
+#_(require '[flow-storm.api :as fs-api])
 
-(fs-api/local-connect)
+#_(fs-api/local-connect)
 ;; Load tree items lazily by triggering loading when item is expanded
 
 (def *state
@@ -47,6 +47,6 @@
     :middleware (fx/wrap-map-desc #'root-view)
     :opts {:fx.opt/map-event-handler handle}))
 
-(flow-storm.api/instrument-namespaces-clj #{"gui-interactive." "examples.e38-lazy-loaded-tree-view"})
+#_(flow-storm.api/instrument-namespaces-clj #{"gui-interactive." "examples.e38-lazy-loaded-tree-view"})
 
 (fx/mount-renderer *state renderer)

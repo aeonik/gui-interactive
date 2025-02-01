@@ -59,6 +59,12 @@
       {:velocity (- new-velocity) :y 0}
       {:velocity new-velocity :y new-y})))
 
+
+;; Bug: this chart re-renders axes on every frame
+;; They also dissapear every frame, creating a fading effect
+;; It completely disappears when moving bars continuously
+;; Need to find a solution to this
+;; 
 (defn chart-view [{:keys [gravity friction]}]
   {:fx/type :line-chart
    :x-axis  {:fx/type :number-axis

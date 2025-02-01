@@ -19,6 +19,8 @@
   (->> path
        clojure.java.io/file
        file-seq))
+
+;; TODO: This should be a test
 (do (take 10 (recursive-file-seq (System/getProperty "user.home"))))
 
 (defn list-file-names
@@ -29,6 +31,7 @@
        .list
        seq))
 
+;; TODO: This should be a test
 (do (list-file-names (System/getProperty "user.home")))
 
 (defn absolute-paths-in-dir
@@ -38,6 +41,7 @@
        .listFiles
        (mapv (fn [f] (.getAbsolutePath f)))))
 
+;; TODO: This should be a test
 (absolute-paths-in-dir (clojure.java.io/file (System/getProperty "user.home")))
 
 (defn subdirs-as-file-objects
@@ -49,6 +53,7 @@
        ;(mapv #(-> % .getAbsolutePath))
        ))
 
+;; TODO: This should be a test
 (subdirs-as-file-objects (clojure.java.io/file (System/getProperty "user.home")))
 
 (defn subdirs
@@ -64,6 +69,7 @@
          (filter #(.isDirectory %))
          (mapv (fn [f] (conj [(-> file .getParentFile .getName)] (.getName f)))))))
 
+;; TODO: These should be a test
 (println (subdirs "/home/dave"))
 (println (subdirs (clojure.java.io/file "/home/dave")))
 (println (subdirs ["home" "dave"]))
@@ -77,6 +83,7 @@
        .listFiles
        (mapv (fn [f] (.getAbsolutePath f)))))
 
+;; TODO: This should be a test
 (absolute-paths-in-dir (clojure.java.io/file (System/getProperty "user.home")))
 
 ;; Discussion here: https://chat.openai.com/share/bbafdcbe-b676-4a0c-b61e-75e269d0fb28
@@ -91,6 +98,7 @@
         (.reset key)
         (recur)))
     events-chan))
+
 ;; To use the previous function run this, it's probably broken because ChatGPT came up with it
 (comment (let [events-chan (watch-dir "/path/to/dir")]
            (async/go-loop []

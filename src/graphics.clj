@@ -5,7 +5,7 @@
             [overtone.live] ; side effects
             [overtone.sc.ugens :as ugens]
 
-            [overtone.studio.inst :refer [definst]])
+            #_[overtone.studio.inst :refer [definst]])
   (:import [javafx.scene.input MouseEvent]))
 
 

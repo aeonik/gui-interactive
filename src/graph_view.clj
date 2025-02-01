@@ -26,6 +26,9 @@
     [clojure.lang IExceptionInfo]))
 
 
+;; This file is seriously messed up somehow, I am not sure what happened.
+;; Need to fix a lot of dependencies
+
 ;; https://gist.github.com/cgrand/b5bf4851b0e5e3aeb438eba2298dacb9
 ;; Might also want to use https://github.com/cgrand/xforms
 (defn tree-cat [branch? children]
@@ -54,7 +57,8 @@
         ([acc] (rf acc))
         ([acc x] (unreduced (nested acc x)))))))
 
-(defn nodes-cat [branch? children]
+;; TODO: Figure out what ensure-kvrf is
+#_(defn nodes-cat [branch? children]
   (fn [rf]
     (let [rf (x/ensure-kvrf rf)
           nested (fn nested [acc x]
@@ -139,9 +143,11 @@
 (:size project-data)
 
 (def root-edn (:root-edn project-data))
-(take 1 (mapcat root-edn))
 
-(transduce (comp (tree-cat map? vals)
+;;Broken
+#_(take 1 (mapcat root-edn))
+
+#_(transduce (comp (tree-cat map? vals)
                  (filter map?))
            (:root-edn project-data))
       
@@ -199,9 +205,9 @@
                  (mapv + acc item)))]
     (transduce xform f [0 0] data)))
 
-sicmutils.env> (time (global-totals (take 100000 (cycle inputs))))
-"Elapsed time: 2386.474 msecs"
-[6440000 14540000]
+;; sicmutils.env> (time (global-totals (take 100000 (cycle inputs))))
+;; "Elapsed time: 2386.474 msecs"
+;; [6440000 14540000]
 
 (map (fn [key] 
        {key (count 
@@ -217,21 +223,23 @@ sicmutils.env> (time (global-totals (take 100000 (cycle inputs))))
                           (keys project-data))))
 
 ;; Does not work
-(tree-diff (:root-edn project-data) (:user-edn project-data)) 
+#_(tree-diff (:root-edn project-data) (:user-edn project-data)) 
 
 (frequencies root-edn)
 
-(def root-edn-user-edn-project-edn (deps/find-edn-maps (or deps "deps.edn")))
-(def master-edn (deps/merge-edns [(:root-edn root-edn-user-edn-project-edn)
+#_(def root-edn-user-edn-project-edn (deps/find-edn-maps (or deps-edn "deps.edn")))
+#_(def master-edn (deps/merge-edns [(:root-edn root-edn-user-edn-project-edn)
                                   (:user-edn root-edn-user-edn-project-edn)
                                   (:project-edn root-edn-user-edn-project-edn)]))
-(def combined-aliases (deps/combine-aliases master-edn aliases))
+#_(def combined-aliases (deps/combine-aliases master-edn aliases))
 ;; aliases should be defined somewhere
-(def basis (session/with-session
+;;
+
+#_(def basis (session/with-session
              (deps/calc-basis master-edn {:resolve-args (merge combined-aliases
                                                                {:trace true})
                                           :classpath-args combined-aliases})))
-(def lib-map (:libs basis))
+#_(def lib-map (:libs basis))
 
 (defn- ->tree-item [x]
   (cond
@@ -241,14 +249,14 @@ sicmutils.env> (time (global-totals (take 100000 (cycle inputs))))
 
 (defn- graph
   [ns-name key]
-  (let [ns (ns-parse/parse-ns ns-name)
+  (let [ns (ns-parse/read-ns-decl ns-name)
         deps (->> ns
                   :requires
                   (map :name)
                   (mapcat (fn [x] (deps/resolve-deps '{:deps {x {}}}))))]
     (into {} (map (fn [x] [x deps]) (get ns key)))))
 
-(defn var-graph
+#_(defn var-graph
   "Returns a map of vars to their dependencies."
   [ns-name]
   (graph ns-name :vars))
@@ -314,12 +322,14 @@ sicmutils.env> (time (global-totals (take 100000 (cycle inputs))))
          (map #(edn/read-string %))))
 (graph/graph {})
 
-(let [{:keys [root-edn user-edn project-edn]} (deps/find-edn-maps (or deps "deps.edn"))
+
+;; I don't remember what this was doing, but it's incomplete
+#_(let [{:keys [root-edn user-edn project-edn]} (deps/find-edn-maps (or deps "deps.edn"))
       master-edn (deps/merge-edns [root-edn user-edn project-edn])
       combined-aliases (deps/combine-aliases master-edn aliases)
       basis (session/with-session
               (deps/calc-basis master-edn {:resolve-args (merge combined-aliases {:trace true})
                                            :classpath-args combined-aliases}))
-      lib-map (:libs basis)]
+      lib-map (:libs basis)])
 
 
