@@ -1,3 +1,5 @@
+;; clj-kondo-config {:linters {:all false}}
+;; lsp-ignore
 (ns hex-editor.binary-scratch
   (:require [criterium.core :as crit]
             [injest.path :refer [+> +>> x>> =>>]]))
@@ -11,6 +13,7 @@
 (Integer/toBinaryString (Byte/toUnsignedInt (first test-bytes)))
 (Integer/toBinaryString (bit-shift-left (Byte/toUnsignedInt (first test-bytes)) 1))
 
+^{:clj-kondo/ignore true}
 (defn bit-wise-representation
   [b]
   (Integer/toBinaryString (Byte/toUnsignedInt b)))
@@ -179,8 +182,6 @@
 (let [random-bytes (take 1000 (repeatedly #(rand-int 256)))]
   (doall (take 500 (slide-and-chunk3 16 random-bytes))))
 
-(x>> (repeatedly #(rand-int 256))
-     (mapcat byte-to-bits)
-     (take 2))
-
-
+#_(x>> (repeatedly #(rand-int 256))
+       (mapcat byte-to-bits)
+       (take 2))
