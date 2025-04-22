@@ -21,3 +21,6 @@ gui-interactive.iml
 .swp
 .DS_Store
 /.lsp
+
+# keep the config
+!.clj-kondo/config.edn
