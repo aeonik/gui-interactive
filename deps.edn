@@ -34,6 +34,7 @@
            uncomplicate/fluokitten                  {:mvn/version "0.10.0"}
            meander/epsilon                          {:mvn/version "0.0.650"}
            com.phronemophobic/membrane              {:mvn/version "0.14.4-beta"}
+           mogenslund/liquid {:mvn/version "2.1.2"}
            com.phronemophobic.membrane/skialib-macosx-x86-64 {:mvn/version "0.14-beta"}
            com.phronemophobic.membrane/skialib-linux-x86-64 {:mvn/version "0.14-beta"}
            com.phronemophobic.membrane/skialib-macosx-aarch64 {:mvn/version "0.14-beta"}
@@ -50,7 +51,7 @@
                                 com.github.jpmonettas/flow-storm-dbg {:mvn/version "RELEASE"}}
           :jvm-opts            ["-Dflowstorm.startRecording=true"
                                 "-Dclojure.storm.instrumentEnable=true"
-                                "-Dclojure.storm.instrumentOnlyPrefixes=gui-interactive.,graph-view"
+                                "-Dclojure.storm.instrumentOnlyPrefixes=gui-interactive.,graph-view,core.clj,membrane"
                                 "-Dflowstorm.theme=dark"]}
   :test  {:jvm-opts    ["-Xmx10G"]
           :extra-paths ["test"]

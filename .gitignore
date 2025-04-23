@@ -24,3 +24,6 @@ gui-interactive.iml
 
 # keep the config
 !.clj-kondo/config.edn
+.calva/output-window/output.calva-repl
+*.log
+/src/.clj-kondo/.cache
